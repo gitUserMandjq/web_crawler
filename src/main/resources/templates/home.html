@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="js/jquery-1.10.2.min.js?v=1.0.2"></script>
+    <script src="js/ajaxFileUpload.js"></script>
+    <script src="js/ajaxFileUpload.js"></script>
+    <style>
+        table.commonTable td {
+            /* border: 1px solid #dddddd; */
+            /*background: #dcddc0 ;*/
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #999999;
+        }
+    </style>
+</head>
+<body>
+<div>
+    获得地址类型
+
+    <form id="form1" action="" method="post" enctype="multipart/form-data" style=" border: 1px solid #dddddd; border-bottom: none;">
+    <input id="file1" type="file" name="file" accept=".xls,.xlsx"/>
+
+        <input id="button1" style="height: 32px; background: #ffffff; width: 64px;border: 1px solid #dddddd;margin: 0 4px; border-radius: 1px;" type="button" class="btnSearch" value="上传" />
+        <div id="table1"></div>
+    </form>
+</div>
+<script>
+
+    $(function () {
+        $("#button1").on("click",function(){
+            console.log("文件上传");
+            var s = document.getElementById('file1').files[0];
+            var formData = new FormData();
+            formData.append("file", s);
+            $.ajax({
+                type: 'POST',
+                url: "/eth-block-data-collection/eth/account/analyzeAccountType",
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: "json",
+                mimeType: "multipart/form-data",
+                async: false,
+                success: function(result) {
+                    console.log(result);
+                    let list = result.data;
+                    let table = "<table class='commonTable'>";
+                    $.each(list,function(index,items){
+                        table += "<tr><td>"+items.address+"</td><td>"+items.type+"</td>"+"</tr>";
+                    });
+                    table += "</table>";
+                    $("#table1").html(table);
+                },
+                error : function(data){
+
+                }
+            });
+        });
+    });
+
+</script>
+</body>
+</html>

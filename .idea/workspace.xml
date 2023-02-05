@@ -4,22 +4,90 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="39023d7a-cce6-4a83-9914-06514a373a6a" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/Main.java" afterDir="false" />
+    <list default="true" id="39023d7a-cce6-4a83-9914-06514a373a6a" name="Changes" comment="京东登录页面，和短信验证功能">
+      <change afterPath="$PROJECT_DIR$/.idea/jpa-buddy.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/SpringbootApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/account/action/AccountController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/account/model/CrawlerClientInfo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/account/pool/CrawlerClientPool.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/common/exception/ControllerExceptionHandleAdvice.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/common/model/MutiResult.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/common/model/PageData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/common/model/PageParam.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/common/model/WebApiBaseResult.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/common/pool/DriverPool.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/DriverUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/ExcelReadDataDelegated.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/ExcelUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/ExcelXlsxReaderWithDefaultHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/JsonUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/PageUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/PropertiesUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/SnowflakeIdUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/StringUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/jd/action/JdController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/jd/constant/JdConst.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/jd/service/IJdService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/jd/service/impl/JdServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/logback.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/ajaxFileUpload.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/jquery-1.10.2.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/jquery.append.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/jquery.cookie.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/layui.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/modules/code.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/modules/laydate/default/laydate.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/modules/layer/default/icon-ext.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/modules/layer/default/icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/modules/layer/default/layer.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/modules/layer/default/loading-0.gif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/modules/layer/default/loading-1.gif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/css/modules/layer/default/loading-2.gif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/font/iconfont.eot" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/font/iconfont.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/font/iconfont.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/font/iconfont.woff" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/font/iconfont.woff2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/layui/layui.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/home.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/jd/Jdhome.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/test/JDTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$PROJECT_DIR$/../../../apache-maven-3.8.1/repository/org/seleniumhq/selenium/selenium-api/3.141.59/selenium-api-3.141.59.jar!/org/openqa/selenium/interactions/Actions.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$PROJECT_DIR$/../../../apache-maven-3.8.1/repository/org/seleniumhq/selenium/selenium-api/3.141.59/selenium-api-3.141.59.jar!/org/openqa/selenium/interactions/PointerInput.class" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="JpbToolWindowState">
+    <option name="myId2FirstActivated">
+      <map>
+        <entry key="com.haulmont.jpb.jpaStructure" value="true" />
+      </map>
+    </option>
+    <option name="myId2Visible">
+      <map>
+        <entry key="com.haulmont.jpb.jpaStructure" value="true" />
+      </map>
+    </option>
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -27,9 +95,10 @@
   <component name="MavenImportPreferences">
     <option name="generalSettings">
       <MavenGeneralSettings>
-        <option name="localRepository" value="D:\ruanjian\apache-maven-3.6.3\data\.m2\repository" />
-        <option name="mavenHome" value="$PROJECT_DIR$/../../../ruanjian/apache-maven-3.6.3" />
-        <option name="userSettingsFile" value="D:\ruanjian\apache-maven-3.6.3\conf\settings.xml" />
+        <option name="localRepository" value="E:\apache-maven-3.8.1\repository" />
+        <option name="mavenHome" value="Use Maven wrapper" />
+        <option name="useMavenConfig" value="true" />
+        <option name="userSettingsFile" value="E:\apache-maven-3.8.1\conf\settings.xml" />
       </MavenGeneralSettings>
     </option>
   </component>
@@ -45,21 +114,58 @@
     "Repository.Attach.Annotations": "false",
     "Repository.Attach.JavaDocs": "false",
     "Repository.Attach.Sources": "false",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "D:/workspace/ideaspace1/eth-block-data-collection",
-    "project.structure.last.edited": "Libraries",
+    "last_opened_file_path": "E:/workspace/平台/highnet-iot-imm-mqtt-device-data-conversion",
+    "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "MavenSettings"
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "spring.configuration.checksum": "670db5b59e9bc613230c0112498fc807"
   }
 }]]></component>
-  <component name="RunManager">
-    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.crawler.Main" />
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\workspace\平台\web_crawler\src\main\resources\static" />
+      <recent name="E:\workspace\平台\web_crawler\src\main\java\com\crawler\base\common\model" />
+      <recent name="E:\workspace\平台\web_crawler\src\main\java\com\crawler\base\utils" />
+      <recent name="E:\workspace\平台\web_crawler\src\main\resources\templates" />
+      <recent name="E:\workspace\平台\web_crawler\src\main\resources" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\workspace\平台\web_crawler\src\main\resources\templates\jd" />
+      <recent name="E:\workspace\平台\web_crawler\src\main\resources\static" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.crawler" />
+      <recent name="com.crawler.account.action" />
+      <recent name="com.crawler.base.common.exception" />
+      <recent name="com.crawler.jd.action" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Spring Boot.SpringbootApplication">
+    <configuration name="JDTest" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.crawler.test.JDTest" />
       <module name="web_crawler" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.crawler.test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SpringbootApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+      <module name="web_crawler" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.crawler.SpringbootApplication" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.crawler.*" />
@@ -72,7 +178,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Main" />
+        <item itemvalue="Spring Boot.SpringbootApplication" />
+        <item itemvalue="Application.JDTest" />
       </list>
     </recent_temporary>
   </component>
@@ -85,6 +192,16 @@
       <option name="presentableId" value="Default" />
       <updated>1674899719680</updated>
       <workItem from="1674899722096" duration="18755000" />
+      <workItem from="1675006408556" duration="269000" />
+      <workItem from="1675006708029" duration="809000" />
+      <workItem from="1675007619752" duration="62000" />
+      <workItem from="1675007686574" duration="288000" />
+      <workItem from="1675085304204" duration="5503000" />
+      <workItem from="1675091368167" duration="902000" />
+      <workItem from="1675256737462" duration="2326000" />
+      <workItem from="1675259446839" duration="7088000" />
+      <workItem from="1675341339976" duration="12833000" />
+      <workItem from="1675429447626" duration="634000" />
     </task>
     <servers />
   </component>
@@ -101,5 +218,20 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="京东登录页面，和短信验证功能" />
+    <option name="LAST_COMMIT_MESSAGE" value="京东登录页面，和短信验证功能" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/crawler/test/JDTest.java</url>
+          <line>127</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
