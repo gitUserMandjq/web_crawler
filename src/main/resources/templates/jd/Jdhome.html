@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>京东爬虫</title>
     <script src="/web_crawler/js/jquery-1.10.2.min.js?v=1.0.2"></script>
     <script src="/web_crawler/js/jquery.append.js?v=1.0.2"></script>
     <script src="/web_crawler/js/ajaxFileUpload.js"></script>
@@ -38,6 +38,10 @@
         <div>
             验证码：<input type="text" id="verification" name="verification">
             <button id="button_account_loginVerifica" type="button">输入验证码</button>
+        </div>
+        <div>
+            <button id="button_account_loginQrcode" type="button">扫码登录</button>
+            <div id="qrcode" style="margin-left: 100px;"></div>
         </div>
     </form>
     <div>
@@ -106,7 +110,44 @@
                 showStatus(account.message);
             })
         });
+        $("#button_account_loginQrcode").on("click",function(){
+            const formData = $('#account_info').serializeJson();
+            if(judgeEmpty(formData, "mobile", "账号不能为空")){
+                return;
+            };
+            const url = "/web_crawler/jd/loginByQrcode";
+            $.getAjax(url, formData, function(result){
+                const account = result.data;
+                showStatus(account.message);
+                $("#qrcode").html("<img src= 'data:image/jpg;base64,"+account["qrcode"]+"'/>")
+                clearTimeout(timer);
+                timer = setTimeout(getLoginInfo(120000), 2000)
+            })
+        });
     });
+    let timer;
+    function getLoginInfo(timeout){
+        timeout -= 2000;
+        if(timeout <= 0){
+            showStatus("请求超时");
+            layer.alert("请求超时，请重新登录")
+            return;
+        }
+        const url = "/web_crawler/jd/getLoginInfo";
+        const formData = $('#account_info').serializeJson();
+        if(judgeEmpty(formData, "mobile", "账号不能为空")){
+            return;
+        };
+        $.getAjax(url, formData, function(result){
+            const account = result.data;
+            showStatus(account.message);
+            if(account["status"] == 'log_in'){
+                layer.alert("登录成功");
+            }else{
+                timer = setTimeout(getLoginInfo(timeout), 2000)
+            }
+        })
+    }
     function isError(result){
         if("200" == result.statusCode){
             return false;

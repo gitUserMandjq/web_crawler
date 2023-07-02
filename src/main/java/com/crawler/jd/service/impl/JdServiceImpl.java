@@ -2,6 +2,7 @@ package com.crawler.jd.service.impl;
 
 import com.crawler.account.model.CrawlerClientInfo;
 import com.crawler.base.common.model.MutiResult;
+import com.crawler.base.utils.ChromeDriverWapper;
 import com.crawler.base.utils.DriverUtils;
 import com.crawler.base.utils.StringUtils;
 import com.crawler.jd.constant.JdConst;
@@ -46,10 +47,10 @@ public class JdServiceImpl implements IJdService {
      */
     @Override
     public void loginByPassword(String account, String password, CrawlerClientInfo clientInfo) throws Exception{
-        ChromeDriver driver = getChromeDriver(clientInfo);
+        ChromeDriver driver = getChromeDriver(clientInfo).getDriver();
         try {
             // 窗口最大化
-            driver.manage().window().maximize();
+//            driver.manage().window().maximize();//可能报错
             driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
             Thread.sleep(1000L);
             //进入京东首页
@@ -120,13 +121,78 @@ public class JdServiceImpl implements IJdService {
                 clientInfo.logVerifica();
                 return;
             }
-            clientInfo.logIn();
+            if(driver.getCurrentUrl().contains(JdConst.URL_INDEX)){
+                clientInfo.logIn();
+            }
+            clientInfo.logFail("登录失败，尝试用二维码登录");
+            //        driver.quit();
+        }
+    }
+    /**
+     * 使用密码登录
+     * @param account
+     * @param clientInfo
+     */
+    public void loginByQrcode(String account, CrawlerClientInfo clientInfo) throws Exception{
+        ChromeDriver driver = getChromeDriver(clientInfo).getDriver();
+        try {
+            // 窗口最大化
+//            driver.manage().window().maximize();//可能报错
+            driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+            Thread.sleep(1000L);
+            //进入京东首页
+            driver.get(JdConst.URL_LOGIN);
+            WebElement qrCodeImg = driver.findElement(By.className("qrcode-img")).findElement(By.tagName("img"));
+            String base64 = qrCodeImg.getScreenshotAs(OutputType.BASE64);
+            clientInfo.logQrcode(base64);
+        } catch(Exception e){
+            log.error(e.getMessage(), e);
+            clientInfo.logFail(e.getMessage());
+        } finally {
+            sleep(1000);
             //        driver.quit();
         }
     }
 
-    private static ChromeDriver getChromeDriver(CrawlerClientInfo clientInfo) {
-        ChromeDriver driver;
+    /**
+     * 使用密码登录
+     * @param account
+     * @param clientInfo
+     */
+    public void getQRLoginInfo(String account, CrawlerClientInfo clientInfo) throws Exception{
+        ChromeDriverWapper driverWapper = clientInfo.obtainDriver();
+        if(driverWapper == null){
+            throw new Exception("浏览器驱动未打开");
+        }
+        ChromeDriver driver = driverWapper.getDriver();
+        try {
+            // 窗口最大化
+//            driver.manage().window().maximize();//可能报错
+            Thread.sleep(1000L);
+            String currentUrl = driver.getCurrentUrl();
+            if(currentUrl.contains(JdConst.URL_LOGIN)){
+                return;
+            }else if(currentUrl.contains(JdConst.URL_INDEX)){
+                List<WebElement> element = driver.findElement(By.id("ttbar-login")).findElements(By.className("link-login"));//当有这个元素时说明未登录
+                if(element.isEmpty()){
+                    clientInfo.logIn();
+                }else{
+                    clientInfo.logLose();
+                }
+            }else{
+                clientInfo.logFail("不在登录页面");
+                throw new Exception("不在登录页面");
+            }
+        } catch(Exception e){
+            log.error(e.getMessage(), e);
+            clientInfo.logFail(e.getMessage());
+        } finally {
+            sleep(1000);
+            //        driver.quit();
+        }
+    }
+    private static ChromeDriverWapper getChromeDriver(CrawlerClientInfo clientInfo) {
+        ChromeDriverWapper driver;
         if(clientInfo.obtainDriver() != null){
             driver = clientInfo.obtainDriver();
         }else{
@@ -147,10 +213,11 @@ public class JdServiceImpl implements IJdService {
         if(StringUtils.isEmpty(verification) || verification.length() != 6){
             throw new Exception("验证码为空或者不是6位");
         }
-        ChromeDriver driver = clientInfo.obtainDriver();
-        if(driver == null){
+        ChromeDriverWapper driverWapper = clientInfo.obtainDriver();
+        if(driverWapper == null || driverWapper.getDriver() == null){
             throw new Exception("浏览器驱动不存在");
         }
+        ChromeDriver driver = driverWapper.getDriver();
         String currentUrl = driver.getCurrentUrl();
         if(!currentUrl.contains(JdConst.URL_CERTIFIED)){
             throw new Exception("用户不在登录页面");

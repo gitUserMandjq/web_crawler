@@ -1,37 +1,26 @@
 package com.crawler.test;
 
 import com.crawler.base.common.model.MutiResult;
+import com.crawler.base.utils.HostUtils;
+import com.crawler.base.utils.JsonUtil;
+import com.crawler.base.utils.OkHttpClientUtil;
 import com.crawler.jd.constant.JdConst;
 import com.crawler.jd.service.impl.JdServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
-import org.opencv.core.*;
-import org.opencv.core.Point;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
-import org.openqa.selenium.By;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import okhttp3.*;
+import org.openqa.selenium.*;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.interactions.Actions;
 
-import org.apache.commons.codec.binary.Base64;
-import org.openqa.selenium.interactions.PointerInput;
+import org.openqa.selenium.html5.SessionStorage;
+import org.openqa.selenium.remote.HttpCommandExecutor;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Duration;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.openqa.selenium.interactions.PointerInput.Kind.MOUSE;
 @Slf4j
 public class JDTest {
 
@@ -53,16 +42,83 @@ public class JDTest {
         JdServiceImpl jdService = new JdServiceImpl();
         ChromeOptions option = new ChromeOptions();
         option.addArguments("no-sandbox");//禁用沙盒
+        option.addArguments("start-maximized");
+        int port = 9527;
+        if(HostUtils.isUsed(port)){
+            //重连
+            log.info("重连已有debug浏览器");
+            option.setExperimentalOption("debuggerAddress","127.0.0.1:"+port);
+        }else{
+            log.info("使用debug模式启动浏览器");
+            //远程debug模式
+            option.addArguments("--remote-debugging-port="+port);
+        }
         //通过ChromeOptions的setExperimentalOption方法，传下面两个参数来禁止掉谷歌受自动化控制的信息栏
 //    option.setExperimentalOption("useAutomationExtension", false);
 //    option.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
         ChromeDriver driver = new ChromeDriver(option);
+//        System.out.println(driver.getCurrentUrl());
+
+//        driver.manage().window().maximize();//可能报错
+        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        Set<String> windowHandles = driver.getWindowHandles();
+        log.info(windowHandles.toString());
+        URL remoteServer = ((HttpCommandExecutor) driver.getCommandExecutor()).getAddressOfRemoteServer();
+        log.info(String.valueOf(driver.getSessionId()));
+        log.info(String.valueOf(remoteServer.getPort()));
+        log.info(String.valueOf(remoteServer));
+        // 窗口最大化
+        Thread.sleep(1000);
+        WebDriver.Options manage = driver.manage();
+        OkHttpClientUtil okHttpClientUtil = new OkHttpClientUtil(OkHttpClientUtil.getBuilder());
+        String url = "https://www.jd.com/";
+        String cookie = "";
+        {//设置cookie
+            Set<Cookie> cookieSet = manage.getCookies();
+            for(Cookie p:cookieSet){
+//                System.out.println(JsonUtil.object2String(p));
+                cookie += p.getName()+"="+p.getValue()+";";
+            }
+        }
+        //执行js
+//        Object o = driver.executeScript("return sessionStorage.getItem(\"shshshfpa\");");
+//        SessionStorage sessionStorage = driver.getSessionStorage();
+//        Set<String> set = sessionStorage.keySet();
+//        for(String key:set){
+//            String item = sessionStorage.getItem(key);
+//            System.out.println(key+":"+item);
+//        }
+//        List<okhttp3.Cookie> cookies1 = okHttpClientUtil.getClient().cookieJar().loadForRequest(HttpUrl.get(url));
+        System.out.println(cookie);
+        addCart(okHttpClientUtil, cookie);
+//        System.out.println(data.body().string());
+//        driver.get(JdConst.URL_LOGIN);
+//        login(jdService, driver);
+    }
+
+    private static void addCart(OkHttpClientUtil okHttpClientUtil, String cookie) throws IOException {
+        Request request = new Request.Builder()
+                .url("https://cart.jd.com/gate.action?pid=200427809292&pcount=1&ptype=3&sku=100038004389%2C100042412131")
+                .get()
+                .addHeader("sec-ch-ua", "\"Not_A Brand\";v=\"99\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\"")
+                .addHeader("sec-ch-ua-mobile", "?0")
+                .addHeader("sec-ch-ua-platform", "\"Windows\"")
+                .addHeader("Upgrade-Insecure-Requests", "1")
+                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36")
+                .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
+                .addHeader("Sec-Fetch-Site", "none")
+                .addHeader("Sec-Fetch-Mode", "navigate")
+                .addHeader("Sec-Fetch-User", "?1")
+                .addHeader("Sec-Fetch-Dest", "document")
+                .addHeader("host", "cart.jd.com")
+                .addHeader("Cookie", cookie)
+                .build();
+        Response response = okHttpClientUtil.getClient().newCall(request).execute();
+    }
+
+    private static void login(JdServiceImpl jdService, ChromeDriver driver) throws InterruptedException, IOException {
         try {
-            // 窗口最大化
-            driver.manage().window().maximize();
-            driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-            Thread.sleep(1000);
-            //进入百度首页
+            //进入京东首页
             driver.get(JdConst.URL_LOGIN);
             //找到输入框
             {

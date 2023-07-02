@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>节点状态</title>
+    <script src="/web_crawler/js/jquery-1.10.2.min.js?v=1.0.2"></script>
+    <script src="/web_crawler/js/jquery.append.js?v=1.0.2"></script>
+    <script src="/web_crawler/js/ajaxFileUpload.js"></script>
+    <script src="/web_crawler/js/common.js"></script><!-- 引入 layui.css -->
+    <link href="/web_crawler/layui/css/layui.css" rel="stylesheet"></script>
+
+    <!-- 引入 layui.js -->
+    <script src="/web_crawler/layui/layui.js"></script>
+    <style>
+        table.commonTable td {
+            /* border: 1px solid #dddddd; */
+            /*background: #dcddc0 ;*/
+            border-width: 1px;
+            padding: 8px;
+            border-style: solid;
+            border-color: #999999;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div>
+<!--        状态：<span id="status"></span>-->
+        <div id="nodeStatus">
+
+        </div>
+    </div>
+    <div>
+
+    </div>
+    <!--<form id="form1" action="" method="post" enctype="multipart/form-data" style=" border: 1px solid #dddddd; border-bottom: none;">
+    <input id="file1" type="file" name="file" accept=".xls,.xlsx"/>
+
+        <input id="button1" style="height: 32px; background: #ffffff; width: 64px;border: 1px solid #dddddd;margin: 0 4px; border-radius: 1px;" type="button" class="btnSearch" value="上传" />
+        <div id="table1"></div>
+    </form>-->
+</div>
+<script>
+
+    layui.use(['layer', 'form'], function(){
+        var layer = layui.layer;
+        var form = layui.form;
+
+    });
+
+    function judgeEmpty(formData, key, msg) {
+        if (isEmptyStr(formData[key])) {
+            layer.msg(msg);
+            return true;
+        }
+        return false;
+    }
+
+    $(function () {
+        getShardeumNodeList();
+    });
+    let timer;
+    function getShardeumNodeList(){
+        const url = "/web_crawler/eth/node/getShardeumNodeList";
+        const formData = {};
+        $.getAjax(url, formData, function(result){
+            const list = result.data;
+            let html = "<table class='commonTable'><tr>"
+                + "<th>节点</th>"
+                + "<th>地址</th>"
+                + "<th>状态</th>"
+                + "<th>最后更新时间</th>"
+                + "<th>最后停止时间</th>";
+            html += "</tr>";
+            for(const i in list){
+                const node = list[i];
+                html += "<tr>";
+                html += "<td>"+node["name"]+"</td>"
+                    + "<td><a href='https://"+node["url"]+":8080'>"+node["url"]+"</a></td>"
+                    + "<td>"+node["state"]+"</td>"
+                    + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
+                    + "<td>"+getDateStr(node["lastStopTime"])+"</td>";
+                html += "</tr>";
+            }
+            html += "</table>";
+            $("#nodeStatus").html(html);
+            setTimeout(function(){getShardeumNodeList()}, 120000);
+        })
+    }
+    function getDateStr(date){
+        if(date == null){
+            return "";
+        }
+        return new Date(date).getLocalTime(8).format("yyyy-MM-dd HH:mm:ss")
+    }
+    function isError(result){
+        if("200" == result.statusCode){
+            return false;
+        }
+        return true;
+    }
+    function showStatus(message){
+        $("#status").html(message);
+    }
+    function isEmptyStr(s) {
+        if (s == undefined || s == null || s == '') {
+            return true
+        }
+        return false
+    }
+    /**
+     * 格式化日期
+     * @param {string | number | Date} value 指定日期
+     * @param {string} format 格式化的规则
+     * @example
+     * ```js
+     * formatDate();
+     * formatDate(1603264465956);
+     * formatDate(1603264465956, "h:m:s");
+     * formatDate(1603264465956, "Y年M月D日");
+     * ```
+     */
+    function formatDate(value = Date.now(), format = "Y-M-D h:m:s") {
+        const formatNumber = n => `0${n}`.slice(-2);
+        const date = new Date(value);
+        const formatList = ["Y", "M", "D", "h", "m", "s"];
+        const resultList = [];
+        resultList.push(date.getFullYear().toString());
+        resultList.push(formatNumber(date.getMonth() + 1));
+        resultList.push(formatNumber(date.getDate()));
+        resultList.push(formatNumber(date.getHours()));
+        resultList.push(formatNumber(date.getMinutes()));
+        resultList.push(formatNumber(date.getSeconds()));
+        for (let i = 0; i < resultList.length; i++) {
+            format = format.replace(formatList[i], resultList[i]);
+        }
+        return format;
+    }
+</script>
+</body>
+</html>

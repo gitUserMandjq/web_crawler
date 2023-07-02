@@ -1,6 +1,7 @@
 package com.crawler.account.model;
 
 import com.crawler.base.common.pool.DriverPool;
+import com.crawler.base.utils.ChromeDriverWapper;
 import lombok.Data;
 import org.openqa.selenium.chrome.ChromeDriver;
 
@@ -15,13 +16,14 @@ public class CrawlerClientInfo {
     private Date loginTime;
     private String status = STATUS_NEW;
     private String loginStaus = STATUS_NEW;
+    private String qrcode;
 
-    public ChromeDriver obtainDriver() {
+    public ChromeDriverWapper obtainDriver() {
         return DriverPool.getDriver(type, account);
     }
 
-    public void addDriver(ChromeDriver driver){
-        this.session_id = driver.getSessionId().toString();
+    public void addDriver(ChromeDriverWapper driver){
+        this.session_id = driver.getDriver().getSessionId().toString();
         DriverPool.addDriver(type, account, driver);
     }
     public void destoryDriver(){
@@ -33,6 +35,7 @@ public class CrawlerClientInfo {
     public static final String STATUS_LOG_FAIL = "log_fail";//登录失败
     public static final String STATUS_LOG_IN = "log_in";//已登录
     public static final String STATUS_LOG_VERIFICA = "log_Verifica";//短信验证
+    public static final String STATUS_LOG_QRCODE = "log_Qrcode";//二维码验证
     public static final String STATUS_LOG_LOSE = "log_lose";//登录失效
     private String message = MESSAGE_NEW;
     public static final String MESSAGE_NEW = "新建";
@@ -40,6 +43,7 @@ public class CrawlerClientInfo {
     public static final String MESSAGE_LOG_FAIL = "登录失败";
     public static final String MESSAGE_LOG_IN = "已登录";
     public static final String MESSAGE_LOG_VERIFICA = "短信验证";
+    public static final String MESSAGE_LOG_QRCODE = "二维码验证";
     public static final String MESSAGE_LOG_LOSE = "登录失效";
     private String errMessage;
     public boolean canLog(){
@@ -58,6 +62,12 @@ public class CrawlerClientInfo {
         this.status = MESSAGE_LOG_PROCESS;
         this.loginStaus = STATUS_LOG_VERIFICA;
         this.message = MESSAGE_LOG_VERIFICA;
+    }
+    public void logQrcode(String qrcode){
+        this.status = MESSAGE_LOG_PROCESS;
+        this.loginStaus = STATUS_LOG_QRCODE;
+        this.message = MESSAGE_LOG_QRCODE;
+        this.qrcode = qrcode;
     }
     public void logFail(String errMessage){
         this.status = STATUS_LOG_FAIL;

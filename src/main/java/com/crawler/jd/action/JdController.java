@@ -3,7 +3,6 @@ package com.crawler.jd.action;
 import com.crawler.account.model.CrawlerClientInfo;
 import com.crawler.account.pool.CrawlerClientPool;
 import com.crawler.base.common.model.WebApiBaseResult;
-import com.crawler.base.common.pool.DriverPool;
 import com.crawler.base.utils.StringUtils;
 import com.crawler.jd.service.IJdService;
 import org.springframework.stereotype.Controller;
@@ -29,17 +28,35 @@ public class JdController {
             ,@RequestParam(value = "type", required = false) String type
             ,@RequestParam(value = "mobile", required = false) String mobile
             ,@RequestParam(value = "password", required = false) String password) throws Exception {
-        if(StringUtils.isEmpty(type)){
-            throw new Exception("类型不能为空");
-        }
-        if(StringUtils.isEmpty(mobile)){
-            throw new Exception("手机号不能为空");
-        }
+        isMobileEmpty(type, mobile);
         CrawlerClientInfo client = CrawlerClientPool.getAndAddAccount(type, mobile);
         if(!client.canLog()){
             throw new Exception("用户已登录或者正在登录");
         }
         jdService.loginByPassword(mobile, password, client);
+        return WebApiBaseResult.success(client);
+    }
+    @RequestMapping("/loginByQrcode")
+    @ResponseBody
+    public WebApiBaseResult loginByQrcode(HttpSession httpSession, HttpServletRequest request
+            ,@RequestParam(value = "type", required = false) String type
+            ,@RequestParam(value = "mobile", required = false) String mobile) throws Exception {
+        isMobileEmpty(type, mobile);
+        CrawlerClientInfo client = CrawlerClientPool.getAndAddAccount(type, mobile);
+        if(!client.canLog()){
+            throw new Exception("用户已登录或者正在登录");
+        }
+        jdService.loginByQrcode(mobile, client);
+        return WebApiBaseResult.success(client);
+    }
+    @RequestMapping("/getLoginInfo")
+    @ResponseBody
+    public WebApiBaseResult getLoginInfo(HttpSession httpSession, HttpServletRequest request
+            ,@RequestParam(value = "type", required = false) String type
+            ,@RequestParam(value = "mobile", required = false) String mobile) throws Exception {
+        isMobileEmpty(type, mobile);
+        CrawlerClientInfo client = CrawlerClientPool.getAndAddAccount(type, mobile);
+        jdService.getQRLoginInfo(mobile, client);
         return WebApiBaseResult.success(client);
     }
     @RequestMapping("/loginVerifica")
@@ -48,12 +65,7 @@ public class JdController {
             ,@RequestParam(value = "type", required = false) String type
             ,@RequestParam(value = "mobile", required = false) String mobile
             ,@RequestParam(value = "verification", required = false) String verification) throws Exception {
-        if(StringUtils.isEmpty(type)){
-            throw new Exception("类型不能为空");
-        }
-        if(StringUtils.isEmpty(mobile)){
-            throw new Exception("手机号不能为空");
-        }
+        isMobileEmpty(type, mobile);
         CrawlerClientInfo client = CrawlerClientPool.getAndAddAccount(type, mobile);
         if(!CrawlerClientInfo.STATUS_LOG_VERIFICA.equals(client.getLoginStaus())){
             throw new Exception("用户不在短信验证状态");
@@ -66,12 +78,7 @@ public class JdController {
     public WebApiBaseResult resetAccount(HttpSession httpSession, HttpServletRequest request
             ,@RequestParam(value = "type", required = false) String type
             ,@RequestParam(value = "mobile", required = false) String mobile) throws Exception {
-        if(StringUtils.isEmpty(type)){
-            throw new Exception("类型不能为空");
-        }
-        if(StringUtils.isEmpty(mobile)){
-            throw new Exception("手机号不能为空");
-        }
+        isMobileEmpty(type, mobile);
         CrawlerClientInfo client = CrawlerClientPool.getAccount(type, mobile);
         if(client != null){
             //销毁driver
@@ -80,5 +87,14 @@ public class JdController {
             CrawlerClientPool.destoryAccount(type, mobile);
         }
         return WebApiBaseResult.success();
+    }
+
+    private static void isMobileEmpty(String type, String mobile) throws Exception {
+        if(StringUtils.isEmpty(type)){
+            throw new Exception("类型不能为空");
+        }
+        if(StringUtils.isEmpty(mobile)){
+            throw new Exception("手机号不能为空");
+        }
     }
 }
