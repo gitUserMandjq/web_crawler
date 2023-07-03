@@ -232,52 +232,104 @@ public class JSchUtil {
         }
 
     }
-    public static void main(String[] args) throws IOException {
+    public static String execCommandByShell(Session session)throws IOException,JSchException{
+        String result = "";
+
+//2.尝试解决 远程ssh只能执行一句命令的情况
+        ChannelShell channelShell = (ChannelShell) session.openChannel("shell");
+        InputStream inputStream = channelShell.getInputStream();//从远端到达的数据  都能从这个流读取到
+        channelShell.setPty(true);
+        channelShell.connect();
+
+        OutputStream outputStream = channelShell.getOutputStream();//写入该流的数据  都将发送到远程端
+        //使用PrintWriter 就是为了使用println 这个方法
+        //好处就是不需要每次手动给字符加\n
+        PrintWriter printWriter = new PrintWriter(outputStream);
+        printWriter.println("cd /opt/applog/MSISVCServer");
+        printWriter.println("ls");
+        printWriter.println("exit");//为了结束本次交互
+        printWriter.flush();//把缓冲区的数据强行输出
+
+/**
+ shell管道本身就是交互模式的。要想停止，有两种方式：
+ 一、人为的发送一个exit命令，告诉程序本次交互结束
+ 二、使用字节流中的available方法，来获取数据的总大小，然后循环去读。
+ 为了避免阻塞
+ */
+        byte[] tmp = new byte[1024];
+        while(true){
+
+            while(inputStream.available() > 0){
+                int i = inputStream.read(tmp, 0, 1024);
+                if(i < 0) break;
+                String s = new String(tmp, 0, i);
+                if(s.indexOf("--More--") >= 0){
+                    outputStream.write((" ").getBytes());
+                    outputStream.flush();
+                }
+                System.out.println(s);
+            }
+            if(channelShell.isClosed()){
+                System.out.println("exit-status:"+channelShell.getExitStatus());
+                break;
+            }
+            try{Thread.sleep(1000);}catch(Exception e){}
+
+        }
+        outputStream.close();
+        inputStream.close();
+        channelShell.disconnect();
+        session.disconnect();
+        System.out.println("DONE");
+
+        return result;
+    }
+    public static void main(String[] args) throws IOException, JSchException {
         String ipAddr = "18.221.33.188";
         String userName = "ubuntu";
         String password = "opside123";
         int port = 22;
         JSchUtil jSchUtil = new JSchUtil(ipAddr, userName, password, port);
         jSchUtil.connect();
-//        jSchUtil.execute("sudo su\n" + "cd /root/testnet-auto-install-v2/opside-chain && bash ./control-panel.sh\n" +
-//                "5\n" +
-//                "1\n");
+        jSchUtil.execute("sudo su\n" + "cd /root/testnet-auto-install-v2/opside-chain && bash ./control-panel.sh\n" +
+                "5\n" +
+                "1\n");
 
-        try {
-            ChannelShell channel = (ChannelShell) jSchUtil.session.openChannel("shell");
-            channel.connect();
-            InputStream input = channel.getInputStream();
-            BufferedReader inputReader = new BufferedReader(new InputStreamReader(input));
-            String inputLine = null;
-            while((inputLine = inputReader.readLine()) != null) {
-                System.out.println(inputLine);
-            }
-            OutputStream os = channel.getOutputStream();
-            os.write("ls".getBytes());
-            os.flush();
-            while((inputLine = inputReader.readLine()) != null) {
-                System.out.println(inputLine);
-            }
-//            jSchUtil.remoteExecute("ls");
-            jSchUtil.execute("sudo su");
-//            jSchUtil.remoteExecute("sudo cd /root");
-//            List<String> sList = jSchUtil.remoteExecute("sudo cd /root/testnet-auto-install-v2/opside-chain && bash ./control-panel.sh");
-//            boolean flag = false;
-//            for(String s:sList){
-//                if(s.contains("2. Restart the clients")){
-//                    flag = true;
-//                    break;
-//                }
+//        try {
+//            ChannelShell channel = (ChannelShell) jSchUtil.session.openChannel("shell");
+//            channel.connect();
+//            InputStream input = channel.getInputStream();
+//            BufferedReader inputReader = new BufferedReader(new InputStreamReader(input));
+//            String inputLine = null;
+//            while((inputLine = inputReader.readLine()) != null) {
+//                System.out.println(inputLine);
 //            }
-//            System.out.println("条件："+flag);
-//            jSchUtil.remoteExecute("5");
-//            jSchUtil.remoteExecute("1");
-//            jSchUtil.remoteExecute("exit");
-        } catch (JSchException e) {
-            e.printStackTrace();
-        } finally {
-
-        }
+//            OutputStream os = channel.getOutputStream();
+//            os.write("ls".getBytes());
+//            os.flush();
+//            while((inputLine = inputReader.readLine()) != null) {
+//                System.out.println(inputLine);
+//            }
+////            jSchUtil.remoteExecute("ls");
+//            jSchUtil.execute("sudo su");
+////            jSchUtil.remoteExecute("sudo cd /root");
+////            List<String> sList = jSchUtil.remoteExecute("sudo cd /root/testnet-auto-install-v2/opside-chain && bash ./control-panel.sh");
+////            boolean flag = false;
+////            for(String s:sList){
+////                if(s.contains("2. Restart the clients")){
+////                    flag = true;
+////                    break;
+////                }
+////            }
+////            System.out.println("条件："+flag);
+////            jSchUtil.remoteExecute("5");
+////            jSchUtil.remoteExecute("1");
+////            jSchUtil.remoteExecute("exit");
+//        } catch (JSchException e) {
+//            e.printStackTrace();
+//        } finally {
+//
+//        }
 
     }
 }
