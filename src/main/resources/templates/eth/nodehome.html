@@ -20,13 +20,21 @@
             border-style: solid;
             border-color: #999999;
         }
+        .hidden{
+            display: none;
+        }
     </style>
 </head>
 <body>
 <div>
     <div>
+        <button id="shardeum_button">shardeum</button>
+        <button id="opside_button">opside</button>
 <!--        状态：<span id="status"></span>-->
-        <div id="nodeStatus">
+        <div id="shardeum_nodeStatus" class="nodeStatus">
+
+        </div>
+        <div id="opside_nodeStatus" class="nodeStatus hidden">
 
         </div>
     </div>
@@ -55,9 +63,17 @@
         }
         return false;
     }
-
+    $("#shardeum_button").click(function(){
+        $(".nodeStatus").addClass("hidden");
+        $("#shardeum_nodeStatus").removeClass("hidden");
+    })
+    $("#opside_button").click(function(){
+        $(".nodeStatus").addClass("hidden");
+        $("#opside_nodeStatus").removeClass("hidden");
+    })
     $(function () {
         getShardeumNodeList();
+        getOpsideNodeList();
     });
     let timer;
     function getShardeumNodeList(){
@@ -83,8 +99,37 @@
                 html += "</tr>";
             }
             html += "</table>";
-            $("#nodeStatus").html(html);
+            $("#shardeum_nodeStatus").html(html);
             setTimeout(function(){getShardeumNodeList()}, 120000);
+        })
+    }
+    function getOpsideNodeList(){
+        const url = "/web_crawler/eth/node/getOpsideNodeList";
+        const formData = {};
+        $.getAjax(url, formData, function(result){
+            const list = result.data;
+            let html = "<table class='commonTable'><tr>"
+                + "<th>节点</th>"
+                + "<th>地址</th>"
+                + "<th>状态</th>"
+                + "<th>最后更新时间</th>"
+                + "<th>最后停止时间</th>"
+                + "<th>最后重启时间</th>";
+            html += "</tr>";
+            for(const i in list){
+                const node = list[i];
+                html += "<tr>";
+                html += "<td>"+node["name"]+"</td>"
+                    + "<td>"+node["url"]+"</a></td>"
+                    + "<td>"+node["state"]+"</td>"
+                    + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
+                    + "<td>"+getDateStr(node["lastStopTime"])+"</td>"
+                    + "<td>"+getDateStr(node["lastStartTime"])+"</td>";
+                html += "</tr>";
+            }
+            html += "</table>";
+            $("#opside_nodeStatus").html(html);
+            setTimeout(function(){getOpsideNodeList()}, 120000);
         })
     }
     function getDateStr(date){

@@ -1,6 +1,7 @@
 package com.crawler.eth.node.service;
 
 import com.crawler.eth.node.model.EthNodeModel;
+import com.jcraft.jsch.JSchException;
 import okhttp3.OkHttpClient;
 
 import java.io.IOException;
@@ -45,4 +46,15 @@ public interface IEthNodeService {
      * @return
      */
     String startShardeumNode(OkHttpClient client, EthNodeModel node, String accessToken) throws IOException;
+
+    /**
+     * 获取opside状态
+     * @param client
+     * @param nodeList
+     * @return
+     * @throws Exception
+     */
+    void getOpsideStatus(OkHttpClient client, List<EthNodeModel> nodeList)throws Exception;
+
+    void startOpsideNode(EthNodeModel node) throws IOException, JSchException;
 }

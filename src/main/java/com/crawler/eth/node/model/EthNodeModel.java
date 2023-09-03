@@ -24,8 +24,17 @@ public class EthNodeModel {
     private Date lastUpdateTime;//最后更新时间
     @Column(name="lastStopTime")
     private Date lastStopTime;//最后停止时间
+    @Column(name="lastStartTime")
+    private Date lastStartTime;//最后重启时间
     @Column(name="nodeType")
     private String nodeType;//节点类型
+    @Column(name="publicKey")
+    private String publicKey;//公钥
+    @Column(name="indexNum")
+    private String indexNum;//索引
+    @Column(name="enabled")
+    private Integer enabled = 1;//是否可用
 
     public static final String NODETYPE_SHARDEUM = "shardeum";
+    public static final String NODETYPE_OPSIDE = "opside";
 }

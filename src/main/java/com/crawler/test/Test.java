@@ -1,6 +1,7 @@
 package com.crawler.test;
 
 import com.crawler.base.utils.JsonUtil;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
 import javax.net.ssl.*;
@@ -8,23 +9,57 @@ import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-
+@Slf4j
 public class Test {
     public static void main(String[] args) {
 
         try {
-            String url = "18.210.58.21";
+//            String url = "18.210.58.21";
             OkHttpClient client = getUnsafeOkHttpClient();
-            String accessToken = login(client, url);
-            String s = startNode(client, url, accessToken);
-            String status = getStatus(client, url, accessToken);
-            System.out.println(status);
-        } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
-            throw new RuntimeException(e);
+//            String accessToken = login(client, url);
+//            String s = startNode(client, url, accessToken);
+//            String status = getStatus(client, url, accessToken);
+//            System.out.println(status);
+            String index = "4639,6263,6492,6493,6494,6495,11162,11163";
+            List<Map> opsideStatus = getOpsideStatus(client, index);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
+    }
+    static List<Map> getOpsideStatus(OkHttpClient client, String index) throws IOException {
+        MediaType mediaType = MediaType.parse("text/plain");
+        RequestBody body = RequestBody.create(mediaType, "");
+        Request request = new Request.Builder()
+                .url("https://pre-alpha-beacon.opside.info/dashboard/data/validators?validators="+index)
+                .get()
+                .addHeader("sec-ch-ua", "\"Google Chrome\";v=\"113\", \"Chromium\";v=\"113\", \"Not-A.Brand\";v=\"24\"")
+                .addHeader("sec-ch-ua-mobile", "?0")
+                .addHeader("sec-ch-ua-platform", "\"Windows\"")
+                .addHeader("Upgrade-Insecure-Requests", "1")
+                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
+                .addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+                .addHeader("Sec-Fetch-Site", "same-origin")
+                .addHeader("Sec-Fetch-Mode", "navigate")
+                .addHeader("Sec-Fetch-User", "?1")
+                .addHeader("Sec-Fetch-Dest", "document")
+                .addHeader("host", "pre-alpha-beacon.opside.info")
+                .build();
+        Response response = client.newCall(request).execute();
+        String result = response.body().string();
+        System.out.println(result);
+        Map map = JsonUtil.string2Obj(result);
+        List<List> data = (List<List>) map.get("data");
+        List<Map> list = new ArrayList<>();
+        for(List m:data){
+            Map mm = new HashMap();
+            mm.put("index", m.get(1));
+            mm.put("status", m.get(3));
+            list.add(mm);
+            System.out.println(JsonUtil.object2String(mm));
+        }
+        return list;
     }
     static String login(OkHttpClient client, String url) throws IOException, NoSuchAlgorithmException, KeyManagementException {
 

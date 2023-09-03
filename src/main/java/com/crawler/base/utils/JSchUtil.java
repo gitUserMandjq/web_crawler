@@ -1,4 +1,4 @@
-package com.crawler.test;
+package com.crawler.base.utils;
 
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +7,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.Vector;
 
 @Slf4j
 public class JSchUtil {
@@ -63,6 +62,18 @@ public class JSchUtil {
             channel.connect();
             try {
                 BufferedReader inputReader = new BufferedReader(new InputStreamReader(input));
+                while(true) {
+//if(jschChannel.isClosed)
+                    if (channel.getExitStatus() == 0) {
+                        System.out.println("exit-status: " + channel.getExitStatus());
+                        break;
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception ee) {
+                        ee.printStackTrace();
+                    }
+                }
                 String inputLine = null;
                 while((inputLine = inputReader.readLine()) != null) {
                     log.info("   {}", inputLine);
@@ -113,7 +124,7 @@ public class JSchUtil {
             //输出
             printWriter = new PrintWriter(channel.getOutputStream());
             printWriter.println(command);
-//            printWriter.println("exit");
+            printWriter.println("exit");
             printWriter.flush();
             log.info("The remote command is: ");
             String line;
@@ -232,22 +243,24 @@ public class JSchUtil {
         }
 
     }
-    public static String execCommandByShell(Session session)throws IOException,JSchException{
+    public String execCommandByShell(String command)throws IOException,JSchException{
         String result = "";
 
 //2.尝试解决 远程ssh只能执行一句命令的情况
         ChannelShell channelShell = (ChannelShell) session.openChannel("shell");
         InputStream inputStream = channelShell.getInputStream();//从远端到达的数据  都能从这个流读取到
         channelShell.setPty(true);
-        channelShell.connect();
+        channelShell.connect(3000);
 
         OutputStream outputStream = channelShell.getOutputStream();//写入该流的数据  都将发送到远程端
         //使用PrintWriter 就是为了使用println 这个方法
         //好处就是不需要每次手动给字符加\n
         PrintWriter printWriter = new PrintWriter(outputStream);
-        printWriter.println("cd /opt/applog/MSISVCServer");
-        printWriter.println("ls");
-        printWriter.println("exit");//为了结束本次交互
+//        printWriter.println("cd /opt/applog/MSISVCServer");
+//        printWriter.println("ls");
+//        printWriter.println("exit");//为了结束本次交互
+        printWriter.println(command);//为了结束本次交互
+//        printWriter.println("exit");//为了结束本次交互
         printWriter.flush();//把缓冲区的数据强行输出
 
 /**
@@ -258,7 +271,7 @@ public class JSchUtil {
  */
         byte[] tmp = new byte[1024];
         while(true){
-
+            System.out.println("========");
             while(inputStream.available() > 0){
                 int i = inputStream.read(tmp, 0, 1024);
                 if(i < 0) break;
@@ -267,7 +280,17 @@ public class JSchUtil {
                     outputStream.write((" ").getBytes());
                     outputStream.flush();
                 }
+                boolean endFlag = s.contains("ubuntu@ip") && s.endsWith(":~$ ")
+                        || s.contains("root@ip") && s.endsWith("# ");
                 System.out.println(s);
+                if(endFlag){
+                    printWriter.println("exit");//为了结束本次交互
+                    printWriter.flush();//把缓冲区的数据强行输出
+                }
+//                if(s.contains(exitMessage)){
+//                    printWriter.println("exit");//为了结束本次交互
+//                    printWriter.flush();//把缓冲区的数据强行输出
+//                }
             }
             if(channelShell.isClosed()){
                 System.out.println("exit-status:"+channelShell.getExitStatus());
@@ -284,17 +307,32 @@ public class JSchUtil {
 
         return result;
     }
+    public static JSchUtil getInstance(String ipAddr, String userName, String password){
+        int port = 22;
+        JSchUtil jSchUtil = new JSchUtil(ipAddr, userName, password, port);
+        jSchUtil.connect();
+        return jSchUtil;
+    }
     public static void main(String[] args) throws IOException, JSchException {
         String ipAddr = "18.221.33.188";
+//        String userName = "root";
         String userName = "ubuntu";
         String password = "opside123";
         int port = 22;
         JSchUtil jSchUtil = new JSchUtil(ipAddr, userName, password, port);
         jSchUtil.connect();
-        jSchUtil.execute("sudo su\n" + "cd /root/testnet-auto-install-v2/opside-chain && bash ./control-panel.sh\n" +
-                "5\n" +
-                "1\n");
-
+        String command =
+                "sudo su\n" +
+//                "sudo chmod +x /root\n" +
+                "cd /root/testnet-auto-install-v2/opside-chain && sudo bash ./control-panel.sh\n" +
+                "2\n" +
+                "1\n" +
+                "exit\n";
+//        String command = "ls";
+        jSchUtil.execCommandByShell(command);
+//        jSchUtil.remoteExecute(command);
+//        jSchUtil.execute(command);
+        log.info("end");
 //        try {
 //            ChannelShell channel = (ChannelShell) jSchUtil.session.openChannel("shell");
 //            channel.connect();

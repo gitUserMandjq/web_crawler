@@ -53,6 +53,19 @@ public class EthNodeController {
      * 获取shardeum节点列表
      * @param httpSession
      * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/getOpsideNodeList")
+    @ResponseBody
+    public WebApiBaseResult getOpsideList(HttpSession httpSession, HttpServletRequest request) throws Exception {
+        List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_OPSIDE);
+        return WebApiBaseResult.success(ethNodeModels);
+    }
+    /**
+     * 获取shardeum节点列表
+     * @param httpSession
+     * @param request
      * @param type
      * @param mobile
      * @param password
@@ -75,6 +88,34 @@ public class EthNodeController {
                 if("stopped".equals(state)){//如果节点停止了，则开启节点
                     ethNodeService.startShardeumNode(client, node, accessToken);
                     ethNodeService.getShardeumStatus(client, node, accessToken);
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+
+        }
+        return WebApiBaseResult.success(ethNodeModels);
+    }
+    /**
+     * 获取shardeum节点列表
+     * @param httpSession
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/dealOpsideNodeList")
+    @ResponseBody
+    public WebApiBaseResult dealOpsideNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
+        List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_OPSIDE);
+        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient();
+        ethNodeService.getOpsideStatus(client, ethNodeModels);
+        for(EthNodeModel node:ethNodeModels){
+            try {
+                if(0 == node.getEnabled()){//节点停用则不进行处理
+                    continue;
+                }
+                if("active_offline".equals(node.getState())){
+                    ethNodeService.startOpsideNode(node);
                 }
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
