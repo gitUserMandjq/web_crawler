@@ -47,6 +47,8 @@ public interface IEthNodeService {
      */
     String startShardeumNode(OkHttpClient client, EthNodeModel node, String accessToken) throws IOException;
 
+    void upgradeShardeumNode(EthNodeModel node) throws IOException, JSchException;
+
     /**
      * 获取opside状态
      * @param client
@@ -57,4 +59,6 @@ public interface IEthNodeService {
     void getOpsideStatus(OkHttpClient client, List<EthNodeModel> nodeList)throws Exception;
 
     void startOpsideNode(EthNodeModel node) throws IOException, JSchException;
+
+    void getAvailSessionKey(EthNodeModel node) throws IOException, JSchException;
 }

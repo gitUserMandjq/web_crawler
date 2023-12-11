@@ -17,13 +17,16 @@ public class Test {
 
         try {
 //            String url = "18.210.58.21";
-            OkHttpClient client = getUnsafeOkHttpClient();
-//            String accessToken = login(client, url);
-//            String s = startNode(client, url, accessToken);
-//            String status = getStatus(client, url, accessToken);
-//            System.out.println(status);
-            String index = "4639,6263,6492,6493,6494,6495,11162,11163";
-            List<Map> opsideStatus = getOpsideStatus(client, index);
+//            OkHttpClient client = getUnsafeOkHttpClient();
+////            String accessToken = login(client, url);
+////            String s = startNode(client, url, accessToken);
+////            String status = getStatus(client, url, accessToken);
+////            System.out.println(status);
+//            String index = "4639,6263,6492,6493,6494,6495,11162,11163";
+//            List<Map> opsideStatus = getOpsideStatus(client, index);
+            String s = "\"result\":\"0x46463d254f4ae4344d346edb14ac4eb96c90a0076a31743e3751958ef534813431987c7026d7c3b95905fb3f6a2b9468f3c946aadbfe88935d231e15a89f0a4e285c71c9f569acab730c9102bc9b762c1205ab3d75d01e22eb08589ff0315c49481b8e7de1c45da0bd76c91ed8495c7aaf23d1abd13cb0982fdcdce19c4ccf4c\",\"id\"";
+            String sessionKey = s.split("result\":\"")[1].split("\",\"id\"")[0];
+            System.out.println(sessionKey);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }

@@ -50,7 +50,7 @@ public class EthNodeController {
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
-     * 获取shardeum节点列表
+     * 获取opside节点列表
      * @param httpSession
      * @param request
      * @return
@@ -60,6 +60,19 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult getOpsideList(HttpSession httpSession, HttpServletRequest request) throws Exception {
         List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_OPSIDE);
+        return WebApiBaseResult.success(ethNodeModels);
+    }
+    /**
+     * 获取avail节点列表
+     * @param httpSession
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/getAvailNodeList")
+    @ResponseBody
+    public WebApiBaseResult getAvailNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
+        List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_AVAIL);
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
@@ -97,7 +110,7 @@ public class EthNodeController {
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
-     * 获取shardeum节点列表
+     * 重启opside节点
      * @param httpSession
      * @param request
      * @return
@@ -117,6 +130,25 @@ public class EthNodeController {
                 if("active_offline".equals(node.getState())){
                     ethNodeService.startOpsideNode(node);
                 }
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+
+        }
+        return WebApiBaseResult.success(ethNodeModels);
+    }
+    @RequestMapping("/getAvailSessionKey")
+    @ResponseBody
+    public WebApiBaseResult getAvailSessionKey(HttpSession httpSession, HttpServletRequest request) throws Exception {
+        List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_AVAIL);
+        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient();
+        ethNodeService.getOpsideStatus(client, ethNodeModels);
+        for(EthNodeModel node:ethNodeModels){
+            try {
+                if(0 == node.getEnabled()){//节点停用则不进行处理
+                    continue;
+                }
+                ethNodeService.getAvailSessionKey(node);
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }

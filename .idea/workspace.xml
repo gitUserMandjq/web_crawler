@@ -5,14 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="39023d7a-cce6-4a83-9914-06514a373a6a" name="Changes" comment="提交">
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/ThreadUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/test/MyTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/JSchUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/JSchUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/action/EthNodeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/action/EthNodeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/dao/EthNodeDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/dao/EthNodeDao.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/model/EthNodeModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/model/EthNodeModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/service/IEthNodeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/service/IEthNodeService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/service/impl/EthNodeServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/eth/node/service/impl/EthNodeServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/test/JSchUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/base/utils/JSchUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/crawler/test/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/crawler/test/Test.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/templates/eth/nodehome.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/eth/nodehome.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -94,7 +96,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "E:/workspace/小诸葛注塑",
+    "last_opened_file_path": "E:/workspace/鲸联云",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.2",
@@ -118,42 +120,29 @@
       <recent name="com.crawler.base.utils" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.crawler.base.utils" />
+      <recent name="com.test" />
       <recent name="com.crawler.test" />
       <recent name="com.crawler.eth.node.action" />
       <recent name="com.crawler.eth.node.dao" />
-      <recent name="com.crawler.eth.node.model" />
-      <recent name="com.crawler" />
     </key>
   </component>
-  <component name="RunManager" selected="Deploy to Host.部署docker服务jar包">
+  <component name="RunManager" selected="JUnit.MyTests.contextLoads">
+    <configuration name="EthNodeServiceImpl" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.crawler.eth.node.service.impl.EthNodeServiceImpl" />
+      <module name="web_crawler" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.crawler.eth.node.service.impl.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="JSchUtil" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.crawler.base.utils.JSchUtil" />
-      <module name="web_crawler" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.crawler.base.utils.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="SSHJSchTest" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.crawler.test.SSHJSchTest" />
-      <module name="web_crawler" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.crawler.base.utils.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="SSHTest" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.crawler.test.SSHTest" />
       <module name="web_crawler" />
       <extension name="coverage">
         <pattern>
@@ -202,7 +191,7 @@
       <option name="ecsInstances" />
       <option name="hostIds">
         <list>
-          <option value="2" />
+          <option value="4" />
         </list>
       </option>
       <option name="hostTagId" value="0" />
@@ -214,6 +203,22 @@
       <option name="uploadType" value="MAVEN" />
       <method v="2">
         <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/../web_crawler\pom.xml" goal="clean install" />
+      </method>
+    </configuration>
+    <configuration name="MyTests.contextLoads" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="web_crawler" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.test.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.test" />
+      <option name="MAIN_CLASS_NAME" value="com.test.MyTests" />
+      <option name="METHOD_NAME" value="contextLoads" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
       </method>
     </configuration>
     <configuration name="SpringbootApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
@@ -231,11 +236,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Spring Boot.SpringbootApplication" />
-        <item itemvalue="Application.Test" />
+        <item itemvalue="JUnit.MyTests.contextLoads" />
         <item itemvalue="Application.JSchUtil" />
-        <item itemvalue="Application.SSHTest" />
-        <item itemvalue="Application.SSHJSchTest" />
+        <item itemvalue="Application.Test" />
+        <item itemvalue="Application.EthNodeServiceImpl" />
+        <item itemvalue="Spring Boot.SpringbootApplication" />
       </list>
     </recent_temporary>
   </component>
@@ -285,6 +290,11 @@
       <workItem from="1690733599531" duration="606000" />
       <workItem from="1690806616527" duration="1715000" />
       <workItem from="1692412641894" duration="1244000" />
+      <workItem from="1693756438920" duration="658000" />
+      <workItem from="1693829103932" duration="1418000" />
+      <workItem from="1694516681362" duration="183000" />
+      <workItem from="1701082936075" duration="19273000" />
+      <workItem from="1702040264801" duration="1327000" />
     </task>
     <task id="LOCAL-00001" summary="京东登录页面，和短信验证功能">
       <created>1675583948628</created>
@@ -307,7 +317,14 @@
       <option name="project" value="LOCAL" />
       <updated>1688379034688</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="提交">
+      <created>1693756483202</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1693756483202</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

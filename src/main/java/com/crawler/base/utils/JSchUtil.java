@@ -7,6 +7,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @Slf4j
 public class JSchUtil {
@@ -76,7 +78,7 @@ public class JSchUtil {
                 }
                 String inputLine = null;
                 while((inputLine = inputReader.readLine()) != null) {
-                    log.info("   {}", inputLine);
+                    log.info("输出命令：{}", inputLine);
                     resultLines.add(inputLine);
                 }
             } finally {
@@ -106,7 +108,7 @@ public class JSchUtil {
      * @param command
      * @return
      */
-    public List<String> execute(String command) throws IOException, JSchException {
+    public List<String> execute(String command, String endCommand) throws IOException, JSchException {
         log.info("execute-start");
         List<String> stdout  = new ArrayList<>();
         ChannelShell channel = null;
@@ -125,12 +127,13 @@ public class JSchUtil {
             printWriter = new PrintWriter(channel.getOutputStream());
             printWriter.println(command);
             printWriter.println("exit");
+            printWriter.println(endCommand);
             printWriter.flush();
             log.info("The remote command is: ");
             String line;
             while ((line = input.readLine()) != null) {
                 stdout.add(line);
-                System.out.println(line);
+                System.out.println("命令行输出："+line);
             }
         } catch (Exception e) {
             log.error(e.getMessage(),e);
@@ -271,27 +274,30 @@ public class JSchUtil {
  */
         byte[] tmp = new byte[1024];
         while(true){
-            System.out.println("========");
+            StringBuilder sb = new StringBuilder();
             while(inputStream.available() > 0){
                 int i = inputStream.read(tmp, 0, 1024);
                 if(i < 0) break;
                 String s = new String(tmp, 0, i);
-                if(s.indexOf("--More--") >= 0){
-                    outputStream.write((" ").getBytes());
-                    outputStream.flush();
-                }
-                boolean endFlag = s.contains("ubuntu@ip") && s.endsWith(":~$ ")
-                        || s.contains("root@ip") && s.endsWith("# ");
-                System.out.println(s);
-                if(endFlag){
-                    printWriter.println("exit");//为了结束本次交互
-                    printWriter.flush();//把缓冲区的数据强行输出
-                }
+                sb.append(s);
 //                if(s.contains(exitMessage)){
 //                    printWriter.println("exit");//为了结束本次交互
 //                    printWriter.flush();//把缓冲区的数据强行输出
 //                }
             }
+            String s = sb.toString();
+            if(s.indexOf("--More--") >= 0){
+                outputStream.write((" ").getBytes());
+                outputStream.flush();
+            }
+            boolean endFlag = s.contains("ubuntu@ip") && s.endsWith(":~$ ")
+                    || s.contains("root@ip") && s.endsWith("# ");
+            System.out.println("控制台输出："+s);
+            if(endFlag){
+                printWriter.println("exit");//为了结束本次交互
+                printWriter.flush();//把缓冲区的数据强行输出
+            }
+            System.out.println("循环一次");
             if(channelShell.isClosed()){
                 System.out.println("exit-status:"+channelShell.getExitStatus());
                 break;
@@ -307,6 +313,73 @@ public class JSchUtil {
 
         return result;
     }
+    public static class PrintProperty{
+        public String console = "";
+        public PrintWriter printWriter;
+        public Boolean endFlag = false;
+        public String stage = "0";
+    }
+    public String execCommandByShell(String command, Function<PrintProperty, String> func)throws IOException,JSchException{
+        this.connect();
+        String result = "";
+
+//2.尝试解决 远程ssh只能执行一句命令的情况
+        ChannelShell channelShell = (ChannelShell) session.openChannel("shell");
+        InputStream inputStream = channelShell.getInputStream();//从远端到达的数据  都能从这个流读取到
+        channelShell.setPty(true);
+        channelShell.connect(3000);
+
+        OutputStream outputStream = channelShell.getOutputStream();//写入该流的数据  都将发送到远程端
+        //使用PrintWriter 就是为了使用println 这个方法
+        //好处就是不需要每次手动给字符加\n
+        PrintWriter printWriter = new PrintWriter(outputStream);
+        if(!StringUtils.isEmpty(command)){
+            printWriter.println(command);//为了结束本次交互
+            printWriter.flush();//把缓冲区的数据强行输出
+        }
+        PrintProperty pp = new PrintProperty();
+        pp.printWriter = printWriter;
+/**
+ shell管道本身就是交互模式的。要想停止，有两种方式：
+ 一、人为的发送一个exit命令，告诉程序本次交互结束
+ 二、使用字节流中的available方法，来获取数据的总大小，然后循环去读。
+ 为了避免阻塞
+ */
+        byte[] tmp = new byte[1024];
+        while(true){
+            StringBuilder sb = new StringBuilder();
+            while(inputStream.available() > 0){
+                int i = inputStream.read(tmp, 0, 1024);
+                if(i < 0) break;
+                String s = new String(tmp, 0, i);
+                sb.append(s);
+            }
+            String s = sb.toString();
+            pp.console = s;
+            if(!s.isEmpty()){
+                System.out.println("命令行输出【"+s+"】");
+            }
+            if(pp.endFlag){//结束
+                pp.printWriter.println("exit");
+                pp.printWriter.flush();
+            }else{
+                result += func.apply(pp);
+            }
+            if(channelShell.isClosed()){
+                System.out.println("exit-status:"+channelShell.getExitStatus());
+                break;
+            }
+            try{Thread.sleep(1000);}catch(Exception e){}
+
+        }
+        outputStream.close();
+        inputStream.close();
+        channelShell.disconnect();
+        session.disconnect();
+        System.out.println("DONE");
+        this.close();
+        return result;
+    }
     public static JSchUtil getInstance(String ipAddr, String userName, String password){
         int port = 22;
         JSchUtil jSchUtil = new JSchUtil(ipAddr, userName, password, port);
@@ -314,22 +387,126 @@ public class JSchUtil {
         return jSchUtil;
     }
     public static void main(String[] args) throws IOException, JSchException {
-        String ipAddr = "18.221.33.188";
-//        String userName = "root";
-        String userName = "ubuntu";
-        String password = "opside123";
+//        String ipAddr = "38.55.97.242";
+        String ipAddr = "44.214.26.1";//错误地址
+        String userName = "root";
+        String password = "ens_search2022";
         int port = 22;
-        JSchUtil jSchUtil = new JSchUtil(ipAddr, userName, password, port);
-        jSchUtil.connect();
-        String command =
-                "sudo su\n" +
-//                "sudo chmod +x /root\n" +
-                "cd /root/testnet-auto-install-v2/opside-chain && sudo bash ./control-panel.sh\n" +
-                "2\n" +
-                "1\n" +
-                "exit\n";
-//        String command = "ls";
-        jSchUtil.execCommandByShell(command);
+        String privateKey = "f248eb72746b1fb4d4ac437745c3d2b01932340c6605812afe1b10135201c07a";
+        JSchUtil jSchUtil = null;
+        try {
+            jSchUtil = new JSchUtil(ipAddr, userName, password, port);
+//            String command =
+//                    "sudo su\n" +
+//                            "cd /root\n" +
+//                            "./.shardeum/shell.sh\n" +
+//                            "operator-cli unstake\n" +
+//                            privateKey + "";
+
+            String command = "sudo su\n" +
+                    "cd /root\n";
+            String result = jSchUtil.execCommandByShell(command, new Function<PrintProperty, String>() {
+                @Override
+                public String apply(PrintProperty pp) {
+                    switch (pp.stage){
+                        case "0":
+                            pp.printWriter.print("./.shardeum/shell.sh\n");
+                            pp.printWriter.flush();
+                            pp.stage = "1";
+                            break;
+                        case "1":
+                            if(pp.console.contains("Error: No such container: shardeum-dashboard")){
+                                pp.printWriter.print("curl -O https://gitlab.com/shardeum/validator/dashboard/-/raw/main/installer.sh && chmod +x installer.sh && ./installer.sh\n");
+                                pp.printWriter.flush();
+                                pp.stage = "5";
+                            }else if(pp.console.contains("Error response from daemon:")){
+                                pp.printWriter.print("docker restart shardeum-dashboard\n");
+                                pp.stage = "0";
+                            }else if(pp.console.contains("~/app$")){
+                                pp.printWriter.print("operator-cli unstake\n");
+                                pp.printWriter.flush();
+                            }else
+                            if(pp.console.contains("Please enter your private key:")){
+                                pp.printWriter.print(privateKey+"\n");
+                                pp.printWriter.flush();
+                                pp.stage = "2";
+                            }
+                            break;
+                        case "2":
+                            if(pp.console.contains("~/app$")){
+                                pp.printWriter.print("exit\n");
+                                pp.printWriter.flush();
+                                pp.stage = "4";
+                            }
+                            break;
+                        case "3":
+                            if(pp.console.contains("~/app$")){//退出
+                                pp.printWriter.print("exit\n");
+                                pp.printWriter.flush();
+                                pp.stage = "4";
+                                return "";
+                            }
+                            break;
+                        case "4":
+                            if(pp.console.contains("]#")){
+                                pp.printWriter.print("curl -O https://gitlab.com/shardeum/validator/dashboard/-/raw/main/installer.sh && chmod +x installer.sh && ./installer.sh\n");
+                                pp.printWriter.flush();
+                                pp.stage = "5";
+                            }
+                            break;
+                        case "5":
+                            if(pp.console.contains("By running this installer, you agree to allow the Shardeum team to collect this data. (Y/n)?")){
+                                pp.printWriter.print("Y\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("What base directory should the node use (default ~/.shardeum):")){
+                                pp.printWriter.print("\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("Do you really want to upgrade now (y/N)")){
+                                pp.printWriter.print("Y\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("Do you want to run the web based Dashboard? (Y/n):")){
+                                pp.printWriter.print("Y\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("Set the password to access the Dashboard:")){
+                                pp.printWriter.print("667889\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("Do you want to change the password for the Dashboard? (y/N):")){
+                                pp.printWriter.print("N\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("Enter the port (1025-65536) to access the web based Dashboard (default 8080):")){
+                                pp.printWriter.print("\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("enter an IPv4 address (default=auto)")){
+                                pp.printWriter.print("\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("This allows p2p communication between nodes. Enter the first port (1025-65536) for p2p communication (default 9001):")){
+                                pp.printWriter.print("\n");
+                                pp.printWriter.flush();
+                            }else if(pp.console.contains("Enter the second port (1025-65536) for p2p communication (default 10001):")){
+                                pp.printWriter.print("\n");
+                                pp.printWriter.flush();
+                                pp.stage = "6";
+                            }
+                            break;
+                        case "6":
+                            if(pp.console.contains("]#")){
+                                pp.printWriter.print("./.shardeum/shell.sh\n");
+                                pp.printWriter.print("operator-cli gui start\n");
+                                pp.printWriter.print("exit\n");
+                                pp.endFlag = true;
+                            }
+                            break;
+                    }
+                    return "";
+                }
+            });
+            System.out.println("result:"+result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("error:" + e.getMessage());
+        }
+        System.out.println("===========================================");
+//        System.out.println("result:"+execute);
 //        jSchUtil.remoteExecute(command);
 //        jSchUtil.execute(command);
         log.info("end");

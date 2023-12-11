@@ -28,13 +28,24 @@ public class EthNodeModel {
     private Date lastStartTime;//最后重启时间
     @Column(name="nodeType")
     private String nodeType;//节点类型
+    @Column(name="privateKey")
+    private String privateKey;//公钥
     @Column(name="publicKey")
     private String publicKey;//公钥
     @Column(name="indexNum")
     private String indexNum;//索引
     @Column(name="enabled")
     private Integer enabled = 1;//是否可用
+    @Column(name="admin")
+    private String admin;//服务器账号
+    @Column(name="password")
+    private String password;//服务器密码
+    @Column(name="sessionKey")
+    private String sessionKey;//avail注册的sessionKey
+    @Column(name="currentSessionKey")
+    private String currentSessionKey;//avail当前的sessionKey
 
     public static final String NODETYPE_SHARDEUM = "shardeum";
     public static final String NODETYPE_OPSIDE = "opside";
+    public static final String NODETYPE_AVAIL = "avail";
 }
