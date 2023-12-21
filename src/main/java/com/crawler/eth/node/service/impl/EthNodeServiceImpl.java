@@ -131,6 +131,10 @@ public class EthNodeServiceImpl implements IEthNodeService {
                             }else if(pp.console.contains("Error response from daemon:")){
                                 pp.printWriter.print("docker restart shardeum-dashboard\n");
                                 pp.stage = "0";
+                            }else if(pp.console.contains("UnhandledPromiseRejection: This error originated either by throwing inside of an async function without a catch block")){
+                                pp.printWriter.print("exit\n");
+                                pp.printWriter.flush();
+                                pp.stage = "4";
                             }else if(pp.console.contains("~/app$")){
                                 pp.printWriter.print("operator-cli unstake\n");
                                 pp.printWriter.flush();
@@ -157,6 +161,11 @@ public class EthNodeServiceImpl implements IEthNodeService {
                             }
                             break;
                         case "4":
+                            if(pp.console.contains("~/app$")){//退出
+                                pp.printWriter.print("exit\n");
+                                pp.printWriter.flush();
+                                return "";
+                            }
                             if(pp.console.contains("]#")){
                                 pp.printWriter.print("curl -O https://gitlab.com/shardeum/validator/dashboard/-/raw/main/installer.sh && chmod +x installer.sh && ./installer.sh\n");
                                 pp.printWriter.flush();
@@ -259,7 +268,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
         String command =
                 "sudo su\n" +
 //                "sudo chmod +x /root\n" +
-                        "cd /root/testnet-auto-install-v2/opside-chain && sudo bash ./control-panel.sh\n" +
+                        "cd /root/testnet-auto-install-v3/opside-chain && sudo bash ./control-panel.sh\n" +
                         "2\n" +
                         "1\n" +
                         "exit\n";
