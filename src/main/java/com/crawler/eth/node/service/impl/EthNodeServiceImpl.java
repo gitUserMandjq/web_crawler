@@ -2,6 +2,7 @@ package com.crawler.eth.node.service.impl;
 
 import com.crawler.base.utils.JSchUtil;
 import com.crawler.base.utils.JsonUtil;
+import com.crawler.base.utils.OkHttpClientUtil;
 import com.crawler.base.utils.StringUtils;
 import com.crawler.eth.node.dao.EthNodeDao;
 import com.crawler.eth.node.model.EthNodeModel;
@@ -54,6 +55,10 @@ public class EthNodeServiceImpl implements IEthNodeService {
     @Override
     public Map<String, Object> getShardeumStatus(OkHttpClient client, EthNodeModel node, String accessToken) throws IOException {
         String status = getShardeumStatus(client, node.getUrl(), accessToken);
+        if(status.contains("shardeumVersion")){
+            String version = status.split("\"shardeumVersion\":\"")[1].split("\",\"minVersion")[0];
+            node.setVersion(version);
+        }
         log.info(status);
         Map<String, Object> map = JsonUtil.string2Obj(status);
         String state = (String) map.get("state");
@@ -64,6 +69,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
             }
         }
         node.setLastUpdateTime(new Date());
+        node.setData(status);
         ethNodeDao.save(node);
         return map;
     }
@@ -119,9 +125,10 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 public String apply(JSchUtil.PrintProperty pp) {
                     switch (pp.stage){
                         case "0":
-                            pp.printWriter.print("./.shardeum/shell.sh\n");
+                            pp.printWriter.print("docker stop shardeum-dashboard\n");
+//                            pp.printWriter.print("./.shardeum/shell.sh\n");
                             pp.printWriter.flush();
-                            pp.stage = "1";
+                            pp.stage = "4";
                             break;
                         case "1":
                             if(pp.console.contains("Error: No such container: shardeum-dashboard")){
@@ -212,7 +219,54 @@ public class EthNodeServiceImpl implements IEthNodeService {
                                 pp.printWriter.print("operator-cli gui start\n");
                                 pp.printWriter.print("exit\n");
                                 pp.endFlag = true;
+                            }else if(pp.console.contains("Continue with the new image")){
+                                pp.printWriter.print("y\n");
+                                pp.printWriter.flush();
                             }
+                            break;
+                    }
+                    return "";
+                }
+            });
+            System.out.println("result:"+result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("error:" + e.getMessage());
+        }
+    }
+    /**
+     * 获得avail的sessionKey
+     * @param node
+     * @return
+     */
+    @Override
+    public void restartShardeumNode(EthNodeModel node) throws IOException, JSchException {
+        String ipAddr = node.getUrl();
+        String userName = node.getAdmin();
+        String password = node.getPassword();
+        int port = 22;
+        log.info("连接节点:{},{},{}",node.getName(), node.getIndexNum(),node.getUrl());
+        String privateKey = node.getPrivateKey();
+        JSchUtil jSchUtil = null;
+        try {
+            jSchUtil = new JSchUtil(ipAddr, userName, password, port);
+//            String command =
+//                    "sudo su\n" +
+//                            "cd /root\n" +
+//                            "./.shardeum/shell.sh\n" +
+//                            "operator-cli unstake\n" +
+//                            privateKey + "";
+
+            String command = "sudo su\n" +
+                    "cd /root\n";
+            String result = jSchUtil.execCommandByShell(command, new Function<JSchUtil.PrintProperty, String>() {
+                @Override
+                public String apply(JSchUtil.PrintProperty pp) {
+                    switch (pp.stage){
+                        case "0":
+                            pp.printWriter.print("docker restart shardeum-dashboard\n");
+                            pp.printWriter.print("exit\n");
+                            pp.printWriter.flush();
                             break;
                     }
                     return "";
@@ -331,17 +385,47 @@ public class EthNodeServiceImpl implements IEthNodeService {
     }
 
     public static void main(String[] args) throws JSchException, IOException {
-        String url = "38.55.97.242";
-        String userName = "root";
-        String password = "1bWJPgHS";
-        JSchUtil jSchUtil = JSchUtil.getInstance(url, userName, password);
-        String command =
-                "docker exec -it avail_validator_node /bin/bash\n" +
-                        "curl -H \"Content-Type: application/json\" -d '{\"id\":1, \"jsonrpc\":\"2.0\", \"method\": \"author_rotateKeys\", \"params\":[]}' http://127.0.0.1:9944";
-//        String command = "ls";
-        String s = jSchUtil.execCommandByShell(command);
-        System.out.println("result"+s);
-        jSchUtil.close();
+        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient().newBuilder()
+                .build();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, "");
+//        Request request = new Request.Builder()
+//                .url("https://52.23.236.161:8080/api/node/status")
+//                .method("GET", null)
+//                .addHeader("Accept", "*/*")
+//                .addHeader("Accept-Language", "zh-CN,zh;q=0.9")
+//                .addHeader("Cache-Control", "no-cache")
+//                .addHeader("Connection", "keep-alive")
+//                .addHeader("Content-Type", "application/json")
+//                .addHeader("Cookie", "accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub2RlSWQiOiIiLCJpYXQiOjE3MDg2MDYzODMsImV4cCI6MTcwODYzNTE4M30.v-FLz-LzGMfVRi30dBzHe6-Skk1vpTPLIjW1M__0D4o")
+//                .addHeader("Pragma", "no-cache")
+//                .addHeader("Referer", "https://52.23.236.161:8080/")
+//                .addHeader("Sec-Fetch-Dest", "empty")
+//                .addHeader("Sec-Fetch-Mode", "cors")
+//                .addHeader("Sec-Fetch-Site", "same-origin")
+//                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+//                .addHeader("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"")
+//                .addHeader("sec-ch-ua-mobile", "?0")
+//                .addHeader("sec-ch-ua-platform", "\"Windows\"")
+//                .build();
+
+        Request request = new Request.Builder()
+                .url("https://52.23.236.161:8080/api/node/status")
+                .get()
+                .addHeader("sec-ch-ua", "\"Google Chrome\";v=\"113\", \"Chromium\";v=\"113\", \"Not-A.Brand\";v=\"24\"")
+                .addHeader("sec-ch-ua-platform", "\"Windows\"")
+                .addHeader("Content-Type", "application/json")
+                .addHeader("sec-ch-ua-mobile", "?0")
+                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
+                .addHeader("Cookie", "accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub2RlSWQiOiIiLCJpYXQiOjE3MDg2MDYzODMsImV4cCI6MTcwODYzNTE4M30.v-FLz-LzGMfVRi30dBzHe6-Skk1vpTPLIjW1M__0D4o")
+                .addHeader("Accept", "*/*")
+                .addHeader("Sec-Fetch-Site", "same-origin")
+                .addHeader("Sec-Fetch-Mode", "cors")
+                .addHeader("Sec-Fetch-Dest", "empty")
+                .addHeader("host", "52.23.236.161")
+                .build();
+        Response response = client.newCall(request).execute();
+        System.out.println(response.body().string());
     }
     Map<String, Object> getOpsideStatusMap(OkHttpClient client, String index) throws IOException {
         MediaType mediaType = MediaType.parse("text/plain");
@@ -393,7 +477,17 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 .build();
         Response response = client.newCall(request).execute();
         Map map = JsonUtil.string2Obj(response.body().string());
-        return (String) map.get("accessToken");
+        String accessToken = (String) map.get("accessToken");
+        if(accessToken == null){
+            List<Cookie> cookies = Cookie.parseAll(request.url(), response.headers());
+            for(Cookie c:cookies){
+                if("accessToken".equals(c.name())){
+                    accessToken = c.value();
+                    break;
+                }
+            }
+        }
+        return accessToken;
     }
     static String getShardeumStatus(OkHttpClient client, String url, String accessToken) throws IOException {
         MediaType mediaType = MediaType.parse("application/json");
@@ -407,6 +501,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 .addHeader("sec-ch-ua-mobile", "?0")
                 .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
                 .addHeader("X-Api-Token", accessToken)
+                .addHeader("Cookie", "accessToken="+accessToken)
                 .addHeader("Accept", "*/*")
                 .addHeader("Sec-Fetch-Site", "same-origin")
                 .addHeader("Sec-Fetch-Mode", "cors")
@@ -461,6 +556,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 .addHeader("sec-ch-ua-mobile", "?0")
                 .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
                 .addHeader("X-Api-Token", accessToken)
+                .addHeader("Cookie", "accessToken="+accessToken)
                 .addHeader("Accept", "*/*")
                 .addHeader("Sec-Fetch-Site", "same-origin")
                 .addHeader("Sec-Fetch-Mode", "cors")
@@ -482,6 +578,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 .addHeader("sec-ch-ua-mobile", "?0")
                 .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
                 .addHeader("X-Api-Token", accessToken)
+                .addHeader("Cookie", "accessToken="+accessToken)
                 .addHeader("Accept", "*/*")
                 .addHeader("Sec-Fetch-Site", "same-origin")
                 .addHeader("Sec-Fetch-Mode", "cors")

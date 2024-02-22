@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class JDTest {
 
     private final static String driver = "webdriver.chrome.driver";
-    private final static String chromeDriver = "D://ruanjian//chromedriver_win32//chromedriver.exe";
+    private final static String chromeDriver = "D://ruanjian//chromedriver-win64//chromedriver.exe";
     private final static String openCvDll = "D:\\ruanjian\\opencv\\build\\java\\x64\\opencv_java460.dll";
     static {
         // 引入谷歌驱动 控制浏览器
@@ -35,7 +35,27 @@ public class JDTest {
     }
     public static void main(String[] args) throws Exception {
 //        List<Integer> track = getTrack(100);
-        loginInfo();
+//        loginInfo();
+        String url = "https://baidu.com/";
+        ChromeOptions option = new ChromeOptions();
+//        option.addArguments("--headless");//禁用沙盒
+//        option.addArguments("window-size=1400,1500");
+        option.addArguments("no-sandbox");//禁用沙盒
+        option.addArguments("start-maximized");
+//        int port = 9527;
+//        if(HostUtils.isUsed(port)){
+//            //重连
+//            log.info("重连已有debug浏览器");
+//            option.setExperimentalOption("debuggerAddress","127.0.0.1:"+port);
+//        }else{
+//            log.info("使用debug模式启动浏览器");
+//            //远程debug模式
+//            option.addArguments("--remote-debugging-port="+port);
+//        }
+        ChromeDriver driver = new ChromeDriver(option);
+        driver.get(url);
+        String text = driver.findElement(By.className("s_ipt")).toString();
+        System.out.println(text);
     }
 
     private static void loginInfo() throws InterruptedException, IOException {

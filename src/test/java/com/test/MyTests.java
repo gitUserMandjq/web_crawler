@@ -27,13 +27,28 @@ class MyTests {
   @Test
   void contextLoads() throws Exception {
     List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_SHARDEUM);
+
+    ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(ethNodeModels.size(), 10);
     for(EthNodeModel node:ethNodeModels){
-      if("shardeum-1".equals(node.getName())){
-        ethNodeService.upgradeShardeumNode(node);
-        break;
-      }
+      chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
+        @Override
+        public void run() throws InterruptedException {
+          if(!"1.10.0".equals(node.getVersion()) ){
+            try {
+//              ethNodeService.upgradeShardeumNode(node);
+              ethNodeService.restartShardeumNode(node);
+            } catch (IOException e) {
+              throw new RuntimeException(e);
+            } catch (JSchException e) {
+              throw new RuntimeException(e);
+            }
+//        break;
+          }
+        }
+      });
 
     }
+    chokeLimitThreadPool.choke();
   }
 
 

@@ -5,6 +5,7 @@ import com.crawler.account.pool.CrawlerClientPool;
 import com.crawler.base.common.model.WebApiBaseResult;
 import com.crawler.base.utils.OkHttpClientUtil;
 import com.crawler.base.utils.StringUtils;
+import com.crawler.base.utils.ThreadUtils;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthNodeService;
 import com.crawler.jd.service.IJdService;
@@ -87,26 +88,30 @@ public class EthNodeController {
      */
     @RequestMapping("/dealShardeumNodeList")
     @ResponseBody
-    public WebApiBaseResult dealShardeumNodeList(HttpSession httpSession, HttpServletRequest request
-            ,@RequestParam(value = "type", required = false) String type
-            ,@RequestParam(value = "mobile", required = false) String mobile
-            ,@RequestParam(value = "password", required = false) String password) throws Exception {
+    public WebApiBaseResult dealShardeumNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
         List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_SHARDEUM);
         OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient();
+        ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(ethNodeModels.size(), 10);
         for(EthNodeModel node:ethNodeModels){
-            try {
-                String accessToken = ethNodeService.loginShardeum(client, node);
-                Map<String, Object> shardeumStatus = ethNodeService.getShardeumStatus(client, node, accessToken);
-                String state = (String) shardeumStatus.get("state");
-                if("stopped".equals(state)){//如果节点停止了，则开启节点
-                    ethNodeService.startShardeumNode(client, node, accessToken);
-                    ethNodeService.getShardeumStatus(client, node, accessToken);
+            chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
+                @Override
+                public void run() throws InterruptedException {
+                    try {
+                        String accessToken = ethNodeService.loginShardeum(client, node);
+                        Map<String, Object> shardeumStatus = ethNodeService.getShardeumStatus(client, node, accessToken);
+                        String state = (String) shardeumStatus.get("state");
+                        if("stopped".equals(state)){//如果节点停止了，则开启节点
+                            ethNodeService.startShardeumNode(client, node, accessToken);
+                            ethNodeService.getShardeumStatus(client, node, accessToken);
+                        }
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
+                    }
                 }
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
+            });
 
         }
+        chokeLimitThreadPool.choke();
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**

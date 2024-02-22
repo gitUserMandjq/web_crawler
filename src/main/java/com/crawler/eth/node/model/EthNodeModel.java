@@ -44,6 +44,10 @@ public class EthNodeModel {
     private String sessionKey;//avail注册的sessionKey
     @Column(name="currentSessionKey")
     private String currentSessionKey;//avail当前的sessionKey
+    @Column(name="data")
+    private String data;//
+    @Column(name="version")
+    private String version;//
 
     public static final String NODETYPE_SHARDEUM = "shardeum";
     public static final String NODETYPE_OPSIDE = "opside";

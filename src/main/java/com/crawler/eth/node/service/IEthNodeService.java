@@ -49,6 +49,8 @@ public interface IEthNodeService {
 
     void upgradeShardeumNode(EthNodeModel node) throws IOException, JSchException;
 
+    void restartShardeumNode(EthNodeModel node) throws IOException, JSchException;
+
     /**
      * 获取opside状态
      * @param client
