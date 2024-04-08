@@ -5,6 +5,7 @@ import com.crawler.base.utils.OkHttpClientUtil;
 import com.crawler.base.utils.ThreadUtils;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthNodeService;
+import com.crawler.eth.node.service.IMonitorService;
 import com.jcraft.jsch.JSchException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -22,6 +23,8 @@ import java.util.List;
 class MyTests {
   @Resource
   IEthNodeService ethNodeService;
+  @Resource
+  IMonitorService monitorService;
 //  @Autowired
 //  private Web3j web3j;
   @Test
@@ -49,6 +52,12 @@ class MyTests {
 
     }
     chokeLimitThreadPool.choke();
+  }
+  @Test
+  void contextLoads2() throws Exception {
+    //加载合约地址
+    String yml = monitorService.genereatePrometheusYml();
+    System.out.println(yml);
   }
 
 
