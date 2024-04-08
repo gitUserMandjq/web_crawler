@@ -48,4 +48,8 @@ public class EthNodeModel {
     public static final String NODETYPE_SHARDEUM = "shardeum";
     public static final String NODETYPE_OPSIDE = "opside";
     public static final String NODETYPE_AVAIL = "avail";
+    public static final String NODETYPE_GAGANODE = "gaganode";
+    public static final String NODETYPE_IONET = "io-net";
+    public static final String NODETYPE_DEPIN = "depin";
+    public static final String NODETYPE_MONITOR = "monitor";//监听服务器
 }
