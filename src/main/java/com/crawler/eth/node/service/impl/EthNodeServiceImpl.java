@@ -125,7 +125,8 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 public String apply(JSchUtil.PrintProperty pp) {
                     switch (pp.stage){
                         case "0":
-                            pp.printWriter.print("docker stop shardeum-dashboard\n");
+                            pp.printWriter.print("docker stop $(docker ps -a|grep -o -e '[^ ]*shardeum-dashboard')\n");
+                            pp.printWriter.print("docker rm $(docker ps -a|grep -o -e '[^ ]*shardeum-dashboard')\n");
 //                            pp.printWriter.print("./.shardeum/shell.sh\n");
                             pp.printWriter.flush();
                             pp.stage = "4";
@@ -173,7 +174,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
                                 pp.printWriter.flush();
                                 return "";
                             }
-                            if(pp.console.contains("]#")){
+                            if(pp.console.contains("]#") || pp.console.contains("~#")){
                                 pp.printWriter.print("curl -O https://gitlab.com/shardeum/validator/dashboard/-/raw/main/installer.sh && chmod +x installer.sh && ./installer.sh\n");
                                 pp.printWriter.flush();
                                 pp.stage = "5";
@@ -214,8 +215,8 @@ public class EthNodeServiceImpl implements IEthNodeService {
                             }
                             break;
                         case "6":
-                            if(pp.console.contains("]#")){
-                                pp.printWriter.print("./.shardeum/shell.sh\n");
+                            if(pp.console.contains("]#") || pp.console.contains("~#")){
+                                pp.printWriter.print("/root/.shardeum/shell.sh\n");
                                 pp.printWriter.print("operator-cli gui start\n");
                                 pp.printWriter.print("exit\n");
                                 pp.endFlag = true;
