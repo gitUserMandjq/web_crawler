@@ -1,14 +1,17 @@
 package com.crawler.eth.node.service.impl;
 
+import com.crawler.base.utils.JSchUtil;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthNodeService;
 import com.crawler.eth.node.service.IMonitorService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.List;
 
 @Service
+@Slf4j
 public class MonitorServiceImpl implements IMonitorService {
     @Resource
     IEthNodeService ethNodeService;
@@ -79,5 +82,34 @@ public class MonitorServiceImpl implements IMonitorService {
             }
         }
         return sb.toString();
+    }
+    @Override
+    public void restartPrometheus(){
+        List<EthNodeModel> nodeList = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_MONITOR);
+        if(nodeList.isEmpty()){
+           return;
+        }
+        EthNodeModel node = nodeList.get(0);
+        String ipAddr = node.getUrl();
+        String userName = node.getAdmin();
+        String password = node.getPassword();
+        int port = 22;
+        log.info("连接节点:{},{},{}",node.getName(), node.getIndexNum(),node.getUrl());
+        String privateKey = node.getPrivateKey();
+        try {
+            JSchUtil jSchUtil = JSchUtil.getInstance(node.getUrl(), userName, password);
+            String command = "sudo su\n" +
+                    "cd /root\n";
+            String yml = genereatePrometheusYml();
+            command += "sudo tee /root/monitoring/prometheus.yml > /dev/null << EOF\n"+yml+"EOF\n";
+            command += "docker restart prometheus\n";
+            command += "exit\n";
+            command += "exit\n";
+            String result = jSchUtil.execCommandByShell(command);
+            jSchUtil.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("error:" + e.getMessage());
+        }
     }
 }
