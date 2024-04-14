@@ -7,6 +7,7 @@ import com.crawler.base.utils.OkHttpClientUtil;
 import com.crawler.base.utils.StringUtils;
 import com.crawler.base.utils.ThreadUtils;
 import com.crawler.eth.node.model.EthNodeModel;
+import com.crawler.eth.node.service.IEthBrowserService;
 import com.crawler.eth.node.service.IEthNodeService;
 import com.crawler.jd.service.IJdService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,8 @@ import java.util.Map;
 public class EthNodeController {
     @Resource
     IEthNodeService ethNodeService;
+    @Resource
+    IEthBrowserService ethBrowserService;
     @GetMapping("/index")
     public String index(){
         return "eth/nodehome"; //当浏览器输入/index时，会返回 /static/home.html的页面
@@ -64,6 +67,19 @@ public class EthNodeController {
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
+     * 获取opside节点列表
+     * @param httpSession
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/getionetNodeList")
+    @ResponseBody
+    public WebApiBaseResult getionetNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
+        List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_IONET);
+        return WebApiBaseResult.success(ethNodeModels);
+    }
+    /**
      * 获取avail节点列表
      * @param httpSession
      * @param request
@@ -90,7 +106,7 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult dealShardeumNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
         List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_SHARDEUM);
-        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient();
+        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient().build();
         ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(ethNodeModels.size(), 10);
         for(EthNodeModel node:ethNodeModels){
             chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
@@ -115,6 +131,26 @@ public class EthNodeController {
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
+     * 获取shardeum节点列表
+     * @param httpSession
+     * @param request
+     * @param type
+     * @param mobile
+     * @param password
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/dealIonetNodeList")
+    @ResponseBody
+    public WebApiBaseResult dealIonetNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
+        ethBrowserService.ionetRefreshToken(1L);
+        List<EthNodeModel> list = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_IONET);
+        for(EthNodeModel node:list){
+            ethBrowserService.getionetDeviceStatus(node);
+        }
+        return WebApiBaseResult.success(list);
+    }
+    /**
      * 重启opside节点
      * @param httpSession
      * @param request
@@ -125,7 +161,7 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult dealOpsideNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
         List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_OPSIDE);
-        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient();
+        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient().build();
         ethNodeService.getOpsideStatus(client, ethNodeModels);
         for(EthNodeModel node:ethNodeModels){
             try {
@@ -146,7 +182,7 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult getAvailSessionKey(HttpSession httpSession, HttpServletRequest request) throws Exception {
         List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_AVAIL);
-        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient();
+        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient().build();
         ethNodeService.getOpsideStatus(client, ethNodeModels);
         for(EthNodeModel node:ethNodeModels){
             try {

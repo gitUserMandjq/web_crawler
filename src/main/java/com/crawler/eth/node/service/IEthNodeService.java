@@ -32,6 +32,9 @@ public interface IEthNodeService {
      * @return
      */
     Map<String, Object> getShardeumStatus(OkHttpClient client, EthNodeModel node, String accessToken) throws IOException;
+
+    void update(EthNodeModel node);
+
     /**
      * 停止shardeum节点
      * @param client

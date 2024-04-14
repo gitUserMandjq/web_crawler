@@ -1,10 +1,14 @@
 package com.crawler.base.utils;
 
 import okhttp3.*;
+import org.apache.commons.lang.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.*;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.SocketAddress;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -283,12 +287,14 @@ public class OkHttpClientUtil {
         return okHttpClient;
 //        return okHttpClientBuilder.connectionPool(CONNECTION_POOL).build();
     }
-
+    public static OkHttpClient.Builder getUnsafeOkHttpClient(){
+        return getUnsafeOkHttpClient("");
+    }
     /**
      * 获得不安全的okhttpClient，用来请求https接口
      * @return
      */
-    public static OkHttpClient getUnsafeOkHttpClient() {
+    public static OkHttpClient.Builder getUnsafeOkHttpClient(String proxy) {
         try {
             final TrustManager[] trustAllCerts = new TrustManager[]{
                     new X509TrustManager() {
@@ -322,10 +328,46 @@ public class OkHttpClientUtil {
                 }
             });
             builder.connectTimeout(30, TimeUnit.SECONDS);
-            return builder.build();
+            addProxy(builder, proxy);
+            return builder;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void addProxy(OkHttpClient.Builder builder, String proxy) {
+        if(StringUtils.isEmpty(proxy)){
+            return;
+        }
+        String[] split = StringUtils.split(proxy, ":");
+        String ip = split[0];
+        int port = NumberUtils.toInt(split[1]);
+        SocketAddress sa = new InetSocketAddress(ip, port);
+        builder.proxy(new Proxy(Proxy.Type.HTTP, sa));
+    }
+    public static CookieJar getCookieJar(String domain, Map<String, Object> cookieMap){
+        return new CookieJar() {
+            @Override
+            public void saveFromResponse(@NotNull HttpUrl httpUrl, @NotNull List<Cookie> list) {
+
+            }
+
+            @NotNull
+            @Override
+            public List<Cookie> loadForRequest(@NotNull HttpUrl httpUrl) {
+                Cookie.Builder builder = new Cookie.Builder();
+                List<Cookie> cookies = new ArrayList<>();
+                Set<Map.Entry<String, Object>> entries = cookieMap.entrySet();
+                for (Map.Entry<String, Object> entry : entries) {
+                    Cookie cookie = builder.domain(domain).path("/")
+                            .name(entry.getKey())
+                            .value(StringUtils.valueOf(entry.getValue()))
+                            .httpOnly().secure().build();
+                    cookies.add(cookie);
+                }
+                return cookies;
+            }
+        };
     }
     public static void main(String[] args) throws IOException {
         Date beginTime = new Date();

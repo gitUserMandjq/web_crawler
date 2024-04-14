@@ -68,11 +68,16 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 node.setLastStopTime(new Date());
             }
         }
-        node.setLastUpdateTime(new Date());
         node.setData(status);
-        ethNodeDao.save(node);
+        update(node);
         return map;
     }
+    @Override
+    public void update(EthNodeModel node) {
+        node.setLastUpdateTime(new Date());
+        ethNodeDao.save(node);
+    }
+
     /**
      * 停止shardeum节点
      * @param client
@@ -299,8 +304,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
                         node.setLastStopTime(new Date());
                     }
                 }
-                node.setLastUpdateTime(new Date());
-                ethNodeDao.save(node);
+                update(node);
             }
         }
     }
@@ -331,7 +335,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
         jSchUtil.execCommandByShell(command);
         jSchUtil.close();
         node.setLastStartTime(new Date());
-        ethNodeDao.save(node);
+        update(node);
     }
     /**
      * 获得avail的sessionKey
@@ -378,16 +382,15 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 node.setState("服务可用");
             }
             node.setLastStartTime(new Date());
-            ethNodeDao.save(node);
+            update(node);
         } catch (Exception e) {
             node.setState(e.getMessage());
-            ethNodeDao.save(node);
+            update(node);
         }
     }
 
     public static void main(String[] args) throws JSchException, IOException {
-        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient().newBuilder()
-                .build();
+        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient().build();
         MediaType mediaType = MediaType.parse("application/json");
         RequestBody body = RequestBody.create(mediaType, "");
 //        Request request = new Request.Builder()
