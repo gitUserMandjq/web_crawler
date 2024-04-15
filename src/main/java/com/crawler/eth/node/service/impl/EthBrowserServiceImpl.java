@@ -181,6 +181,9 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
         node.setData(JsonUtil.object2String(data));
         String status = (String) data.get("status");
         node.setState(status);
+        if(!"up".equals(status)){
+            node.setLastStopTime(new Date());
+        }
         ethNodeService.update(node);
     }
 

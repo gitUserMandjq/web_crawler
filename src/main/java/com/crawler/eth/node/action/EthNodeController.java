@@ -147,6 +147,9 @@ public class EthNodeController {
         List<EthNodeModel> list = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_IONET);
         for(EthNodeModel node:list){
             ethBrowserService.getionetDeviceStatus(node);
+            if(!"up".equals(node.getState())){
+                ethNodeService.restartIonetNode(node);
+            }
         }
         return WebApiBaseResult.success(list);
     }

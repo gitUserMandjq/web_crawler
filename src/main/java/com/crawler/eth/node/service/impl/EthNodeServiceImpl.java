@@ -285,6 +285,52 @@ public class EthNodeServiceImpl implements IEthNodeService {
         }
     }
     /**
+     * 获得avail的sessionKey
+     * @param node
+     * @return
+     */
+    @Override
+    public void restartIonetNode(EthNodeModel node) throws IOException, JSchException {
+        String ipAddr = node.getUrl();
+        String userName = node.getAdmin();
+        String password = node.getPassword();
+        int port = 22;
+        log.info("连接节点:{},{},{}",node.getName(), node.getIndexNum(),node.getUrl());
+        String privateKey = node.getPrivateKey();
+        JSchUtil jSchUtil = null;
+        try {
+            jSchUtil = new JSchUtil(ipAddr, userName, password, port);
+//            String command =
+//                    "sudo su\n" +
+//                            "cd /root\n" +
+//                            "./.shardeum/shell.sh\n" +
+//                            "operator-cli unstake\n" +
+//                            privateKey + "";
+
+            String command = "sudo su\n" +
+                    "cd /root\n";
+            String result = jSchUtil.execCommandByShell(command, new Function<JSchUtil.PrintProperty, String>() {
+                @Override
+                public String apply(JSchUtil.PrintProperty pp) {
+                    switch (pp.stage){
+                        case "0":
+                            pp.printWriter.print("curl -L https://github.com/ionet-official/io_launch_binaries/raw/main/launch_binary_linux -o launch_binary_linux\n");
+                            pp.printWriter.print("chmod +x launch_binary_linux\n");
+                            pp.printWriter.print(node.getRestartScript()+"\n");
+                            pp.printWriter.print("exit\n");
+                            pp.printWriter.flush();
+                            break;
+                    }
+                    return "";
+                }
+            });
+            System.out.println("result:"+result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("error:" + e.getMessage());
+        }
+    }
+    /**
      * 获取opside状态
      * @param client
      * @param nodeList

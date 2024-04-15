@@ -52,6 +52,8 @@ public class EthNodeModel {
     private Long browserId;//
     @Column(name="deviceId")
     private String deviceId;//
+    @Column(name="restartScript")
+    private String restartScript;//
 
     public static final String NODETYPE_SHARDEUM = "shardeum";
     public static final String NODETYPE_OPSIDE = "opside";
