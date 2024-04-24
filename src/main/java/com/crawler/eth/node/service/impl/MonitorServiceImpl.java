@@ -5,6 +5,7 @@ import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthNodeService;
 import com.crawler.eth.node.service.IMonitorService;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -83,8 +84,23 @@ public class MonitorServiceImpl implements IMonitorService {
         }
         return sb.toString();
     }
+    public String genereatePrometheusYml(String type){
+        StringBuilder sb = new StringBuilder();
+        {
+            List<EthNodeModel> nodeList = ethNodeService.listNodeByNodeType(type);
+            if(!nodeList.isEmpty()){
+                for (EthNodeModel node : nodeList) {
+                    sb.append( "      - targets: \n" +
+                            "        - " +node.getUrl()+ ":9100\n" +
+                            "        labels:\n" +
+                            "          instance: " + node.getName()+"\n");
+                }
+            }
+        }
+        return sb.toString();
+    }
     @Override
-    public void restartPrometheus(){
+    public void updatePrometheusNode(){
         List<EthNodeModel> nodeList = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_MONITOR);
         if(nodeList.isEmpty()){
            return;
@@ -100,9 +116,13 @@ public class MonitorServiceImpl implements IMonitorService {
             JSchUtil jSchUtil = JSchUtil.getInstance(node.getUrl(), userName, password);
             String command = "sudo su\n" +
                     "cd /root\n";
-            String yml = genereatePrometheusYml();
-            command += "sudo tee /root/monitoring/prometheus.yml > /dev/null << EOF\n"+yml+"EOF\n";
-            command += "docker restart prometheus\n";
+            command += updateYml(EthNodeModel.NODETYPE_SHARDEUM);
+            command += updateYml(EthNodeModel.NODETYPE_GAGANODE);
+            command += updateYml(EthNodeModel.NODETYPE_DEPIN);
+            command += updateYml(EthNodeModel.NODETYPE_IONET);
+//            command += "docker restart prometheus\n";
+            command += "exit\n";
+            command += "exit\n";
             command += "exit\n";
             command += "exit\n";
             String result = jSchUtil.execCommandByShell(command);
@@ -111,5 +131,13 @@ public class MonitorServiceImpl implements IMonitorService {
             e.printStackTrace();
             System.out.println("error:" + e.getMessage());
         }
+    }
+
+    @NotNull
+    private String updateYml(String type) {
+        String command = "";
+        String yml = genereatePrometheusYml(type);
+        command += "sudo tee /root/monitoring/prometheus/targets/"+type+".yml > /dev/null << EOF\n"+yml+"EOF\n";
+        return command;
     }
 }

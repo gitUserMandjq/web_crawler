@@ -290,7 +290,7 @@ public class JSchUtil {
                 outputStream.write((" ").getBytes());
                 outputStream.flush();
             }
-            boolean endFlag = s.contains("ubuntu@ip") && s.endsWith(":~$ ")
+            boolean endFlag = s.contains("@") && s.endsWith(":~$ ")
                     || s.contains("root@ip") && s.endsWith("# ");
             System.out.println("控制台输出："+s);
             if(endFlag){

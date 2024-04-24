@@ -3,5 +3,6 @@ package com.crawler.eth.node.service;
 public interface IMonitorService {
     String genereatePrometheusYml();
 
-    void restartPrometheus();
+
+    void updatePrometheusNode();
 }
