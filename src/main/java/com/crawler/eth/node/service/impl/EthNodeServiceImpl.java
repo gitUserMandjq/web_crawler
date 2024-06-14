@@ -1,10 +1,9 @@
 package com.crawler.eth.node.service.impl;
 
-import com.crawler.base.utils.JSchUtil;
-import com.crawler.base.utils.JsonUtil;
-import com.crawler.base.utils.OkHttpClientUtil;
-import com.crawler.base.utils.StringUtils;
+import com.crawler.base.utils.*;
 import com.crawler.eth.node.dao.EthNodeDao;
+import com.crawler.eth.node.dao.EthNodeDetailDao;
+import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthNodeService;
 import com.jcraft.jsch.JSchException;
@@ -25,6 +24,8 @@ import java.util.stream.Collectors;
 public class EthNodeServiceImpl implements IEthNodeService {
     @Resource
     EthNodeDao ethNodeDao;
+    @Resource
+    EthNodeDetailDao ethNodeDetailDao;
     /**
      * 获得节点信息
      * @param nodeType
@@ -107,15 +108,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
      */
     @Override
     public void upgradeShardeumNode(EthNodeModel node) throws IOException, JSchException {
-        String ipAddr = node.getUrl();
-        String userName = node.getAdmin();
-        String password = node.getPassword();
-        int port = 22;
-        log.info("连接节点:{},{},{}",node.getName(), node.getIndexNum(),node.getUrl());
-        String privateKey = node.getPrivateKey();
-        JSchUtil jSchUtil = null;
         try {
-            jSchUtil = new JSchUtil(ipAddr, userName, password, port);
+            JSchUtil jSchUtil = connectToNode(node);
+            String privateKey = node.getPrivateKey();
 //            String command =
 //                    "sudo su\n" +
 //                            "cd /root\n" +
@@ -240,6 +235,16 @@ public class EthNodeServiceImpl implements IEthNodeService {
             System.out.println("error:" + e.getMessage());
         }
     }
+
+    @Override
+    public JSchUtil connectToNode(EthNodeModel node) {
+        int port = 22;
+        log.info("连接节点:{},{},{}", node.getName(), node.getIndexNum(), node.getUrl());
+        JSchUtil jSchUtil = null;
+        jSchUtil = new JSchUtil(node.getUrl(), node.getAdmin(), node.getPassword(), port);
+        return jSchUtil;
+    }
+
     /**
      * 获得avail的sessionKey
      * @param node
@@ -247,15 +252,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
      */
     @Override
     public void restartShardeumNode(EthNodeModel node) throws IOException, JSchException {
-        String ipAddr = node.getUrl();
-        String userName = node.getAdmin();
-        String password = node.getPassword();
-        int port = 22;
-        log.info("连接节点:{},{},{}",node.getName(), node.getIndexNum(),node.getUrl());
         String privateKey = node.getPrivateKey();
-        JSchUtil jSchUtil = null;
         try {
-            jSchUtil = new JSchUtil(ipAddr, userName, password, port);
+            JSchUtil jSchUtil = connectToNode(node);
 //            String command =
 //                    "sudo su\n" +
 //                            "cd /root\n" +
@@ -291,15 +290,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
      */
     @Override
     public void restartIonetNode(EthNodeModel node) throws IOException, JSchException {
-        String ipAddr = node.getUrl();
-        String userName = node.getAdmin();
-        String password = node.getPassword();
-        int port = 22;
-        log.info("连接节点:{},{},{}",node.getName(), node.getIndexNum(),node.getUrl());
         String privateKey = node.getPrivateKey();
-        JSchUtil jSchUtil = null;
         try {
-            jSchUtil = new JSchUtil(ipAddr, userName, password, port);
+            JSchUtil jSchUtil = connectToNode(node);
 //            String command =
 //                    "sudo su\n" +
 //                            "cd /root\n" +
@@ -395,14 +388,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
             //如果最近一个小时调用过，则不进行查询
             return;
         }
-        String ipAddr = node.getUrl();
-        String userName = node.getAdmin();
-        String password = node.getPassword();
-        int port = 22;
-        log.info("连接节点:{},{},{}",node.getName(), node.getIndexNum(),node.getUrl());
         String sessionKey = null;
         try {
-            JSchUtil jSchUtil = new JSchUtil(ipAddr, userName, password, port);
+            JSchUtil jSchUtil = connectToNode(node);
             String command =
                     "docker exec -it avail_validator_node /bin/bash\n" +
                             "curl -H \"Content-Type: application/json\" -d '{\"id\":1, \"jsonrpc\":\"2.0\", \"method\": \"author_rotateKeys\", \"params\":[]}' http://127.0.0.1:9944";
@@ -637,5 +625,56 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 .build();
         Response response = client.newCall(request).execute();
         return response.body().string();
+    }
+    @Override
+    public void obtainQuiliBalance() throws InterruptedException {
+        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
+        ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(detailList.size(), 10);
+        for (EthNodeDetailModel ethNodeDetailModel : detailList) {
+            chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
+                @Override
+                public void run() {
+
+                    obtainQuiliBalance(ethNodeDetailModel);
+                }
+            });
+        }
+        chokeLimitThreadPool.choke();
+    }
+    @Override
+    public void obtainQuiliBalance(EthNodeDetailModel ethNodeDetailModel) {
+        EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
+        JSchUtil jSchUtil = connectToNode(node);
+        String command = "sudo su\n" +
+                "cd /root && echo 6|./Quili.sh";
+        try {
+            String result = jSchUtil.execCommandByShell(command, new Function<JSchUtil.PrintProperty, String>() {
+                @Override
+                public String apply(JSchUtil.PrintProperty pp) {
+                    switch (pp.stage){
+                        case "0":
+                            if(pp.console.contains("Unclaimed balance")){
+                                pp.endFlag = true;
+                                String balance = pp.console.split("Unclaimed balance: ")[1].split(" QUIL")[0];
+                                ethNodeDetailModel.setComment(balance);
+                                ethNodeDetailModel.setLastUpdateTime(new Date());
+                                ethNodeDetailModel.setError("");
+                                System.out.println(ethNodeDetailModel.getNodeName()+":"+balance);
+                            }else if(pp.console.contains("error getting node info")){
+                                pp.endFlag = true;
+                                ethNodeDetailModel.setError("error");
+                                ethNodeDetailModel.setLastUpdateTime(new Date());
+                            }
+                            break;
+                    }
+                    return "";
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSchException e) {
+            e.printStackTrace();
+        }
+        ethNodeDetailDao.save(ethNodeDetailModel);
     }
 }

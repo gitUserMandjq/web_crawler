@@ -61,5 +61,6 @@ public class EthNodeModel {
     public static final String NODETYPE_GAGANODE = "gaganode";
     public static final String NODETYPE_IONET = "io-net";
     public static final String NODETYPE_DEPIN = "depin";
+    public static final String NODETYPE_QUILIBRIUM = "Quilibrium";
     public static final String NODETYPE_MONITOR = "monitor";//监听服务器
 }

@@ -200,4 +200,18 @@ public class EthNodeController {
         }
         return WebApiBaseResult.success(ethNodeModels);
     }
+
+    /**
+     * 获得Quili的余额
+     * @param httpSession
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/obtainQuiliBalance")
+    @ResponseBody
+    public WebApiBaseResult obtainQuiliBalance(HttpSession httpSession, HttpServletRequest request) throws Exception {
+        ethNodeService.obtainQuiliBalance();
+        return WebApiBaseResult.success();
+    }
 }

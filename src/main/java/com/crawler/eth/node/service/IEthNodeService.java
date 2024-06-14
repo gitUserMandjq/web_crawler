@@ -1,5 +1,7 @@
 package com.crawler.eth.node.service;
 
+import com.crawler.base.utils.JSchUtil;
+import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.jcraft.jsch.JSchException;
 import okhttp3.OkHttpClient;
@@ -52,6 +54,8 @@ public interface IEthNodeService {
 
     void upgradeShardeumNode(EthNodeModel node) throws IOException, JSchException;
 
+    JSchUtil connectToNode(EthNodeModel node);
+
     void restartShardeumNode(EthNodeModel node) throws IOException, JSchException;
 
     void restartIonetNode(EthNodeModel node) throws IOException, JSchException;
@@ -68,4 +72,8 @@ public interface IEthNodeService {
     void startOpsideNode(EthNodeModel node) throws IOException, JSchException;
 
     void getAvailSessionKey(EthNodeModel node) throws IOException, JSchException;
+
+    void obtainQuiliBalance() throws InterruptedException;
+
+    void obtainQuiliBalance(EthNodeDetailModel ethNodeDetailModel);
 }
