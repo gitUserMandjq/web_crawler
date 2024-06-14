@@ -6,6 +6,7 @@ import com.crawler.base.common.model.WebApiBaseResult;
 import com.crawler.base.utils.OkHttpClientUtil;
 import com.crawler.base.utils.StringUtils;
 import com.crawler.base.utils.ThreadUtils;
+import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthBrowserService;
 import com.crawler.eth.node.service.IEthNodeService;
@@ -51,6 +52,19 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult getShardeumNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
         List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_SHARDEUM);
+        return WebApiBaseResult.success(ethNodeModels);
+    }
+    /**
+     * 获取shardeum节点列表
+     * @param httpSession
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/getNodeDetailList")
+    @ResponseBody
+    public WebApiBaseResult getNodeDetailList(HttpSession httpSession, HttpServletRequest request, @RequestParam(value="nodeType") String nodeType) throws Exception {
+        List<EthNodeDetailModel> ethNodeModels = ethNodeService.listNodeDetailByNodeType(nodeType);
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**

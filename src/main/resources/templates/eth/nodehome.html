@@ -28,11 +28,11 @@
 <body>
 <div>
     <div>
-        <button id="shardeum_button">shardeum</button>
+        <button id="quili_button">quili</button>
         <button id="ionet_button">ionet</button>
         <button id="avail_button">avail</button>
 <!--        状态：<span id="status"></span>-->
-        <div id="shardeum_nodeStatus" class="nodeStatus">
+        <div id="quili_nodeStatus" class="nodeStatus">
 
         </div>
         <div id="ionet_nodeStatus" class="nodeStatus hidden">
@@ -67,9 +67,9 @@
         }
         return false;
     }
-    $("#shardeum_button").click(function(){
+    $("#quili_button").click(function(){
         $(".nodeStatus").addClass("hidden");
-        $("#shardeum_nodeStatus").removeClass("hidden");
+        $("#quili_nodeStatus").removeClass("hidden");
     })
     $("#ionet_button").click(function(){
         $(".nodeStatus").addClass("hidden");
@@ -80,36 +80,36 @@
         $("#avail_nodeStatus").removeClass("hidden");
     })
     $(function () {
-        getShardeumNodeList();
+        getQuiliList();
         getionetNodeList();
         getAvailNodeList();
     });
     let timer;
-    function getShardeumNodeList(){
-        const url = "/web_crawler/eth/node/getShardeumNodeList";
+    function getQuiliList(){
+        const url = "/web_crawler/eth/node/getNodeDetailList?nodeType=Quilibrium";
         const formData = {};
         $.getAjax(url, formData, function(result){
             const list = result.data;
             let html = "<table class='commonTable'><tr>"
                 + "<th>节点</th>"
-                + "<th>地址</th>"
-                + "<th>状态</th>"
+                + "<th>服务器</th>"
+                + "<th>余额</th>"
                 + "<th>最后更新时间</th>"
-                + "<th>最后停止时间</th>";
+                + "<th>异常</th>";
             html += "</tr>";
             for(const i in list){
                 const node = list[i];
                 html += "<tr>";
-                html += "<td>"+node["name"]+"</td>"
-                    + "<td><a href='https://"+node["url"]+":8080'>"+node["url"]+"</a></td>"
-                    + "<td>"+node["state"]+"</td>"
+                html += "<td>"+node["nodeName"]+"</td>"
+                    + "<td>"+node["serverIp"]+"</td>"
+                    + "<td>"+node["comment"]+"</td>"
                     + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
-                    + "<td>"+getDateStr(node["lastStopTime"])+"</td>";
+                    + "<td>"+node["error"]+"</td>";
                 html += "</tr>";
             }
             html += "</table>";
-            $("#shardeum_nodeStatus").html(html);
-            setTimeout(function(){getShardeumNodeList()}, 120000);
+            $("#quili_nodeStatus").html(html);
+            setTimeout(function(){getQuiliList()}, 120000);
         })
     }
     function getionetNodeList(){

@@ -20,6 +20,8 @@ public interface IEthNodeService {
      */
     List<EthNodeModel> listNodeByNodeType(String nodeType);
 
+    List<EthNodeDetailModel> listNodeDetailByNodeType(String nodeType);
+
     /**
      * 登陆shardeum
      * @param client

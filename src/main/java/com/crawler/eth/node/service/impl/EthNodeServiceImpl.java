@@ -37,6 +37,16 @@ public class EthNodeServiceImpl implements IEthNodeService {
         return nodeList;
     }
     /**
+     * 获得节点信息
+     * @param nodeType
+     * @return
+     */
+    @Override
+    public List<EthNodeDetailModel> listNodeDetailByNodeType(String nodeType) {
+        List<EthNodeDetailModel> nodeList = ethNodeDetailDao.findByNodeType(nodeType);
+        return nodeList;
+    }
+    /**
      * 登陆shardeum
      * @param client
      * @param node
@@ -629,7 +639,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
     @Override
     public void obtainQuiliBalance() throws InterruptedException {
         List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
-        ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(detailList.size(), 10);
+        ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(detailList.size(), 3);
         for (EthNodeDetailModel ethNodeDetailModel : detailList) {
             chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
                 @Override
