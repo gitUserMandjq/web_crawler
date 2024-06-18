@@ -654,6 +654,10 @@ public class EthNodeServiceImpl implements IEthNodeService {
     @Override
     public void obtainQuiliBalance(EthNodeDetailModel ethNodeDetailModel) {
         EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
+        if(StringUtils.isEmpty(ethNodeDetailModel.getError())
+                && new Date().getTime() - ethNodeDetailModel.getLastUpdateTime().getTime() < 10*60*1000L){
+            return;
+        }
         JSchUtil jSchUtil = connectToNode(node);
         String command = "sudo su\n" +
                 "cd /root && echo 6|./Quili.sh";
