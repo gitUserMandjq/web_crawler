@@ -30,4 +30,8 @@ public class EthNodeDetailModel {
     private Date lastUpdateTime;//最后更新时间
     @Column(name="error")
     private String error;//节点类型
+    @Column(name="errorTime")
+    private Date errorTime;//最后更新时间
+    @Column(name="version")
+    private String version;//节点类型
 }

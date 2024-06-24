@@ -224,8 +224,12 @@ public class EthNodeController {
      */
     @RequestMapping("/obtainQuiliBalance")
     @ResponseBody
-    public WebApiBaseResult obtainQuiliBalance(HttpSession httpSession, HttpServletRequest request) throws Exception {
-        ethNodeService.obtainQuiliBalance();
+    public WebApiBaseResult obtainQuiliBalance(HttpSession httpSession, HttpServletRequest request, @RequestParam(required = false, value = "detailId") Long detailId) throws Exception {
+        if(detailId != null){
+            ethNodeService.obtainQuiliBalance(detailId);
+        }else{
+            ethNodeService.obtainQuiliBalance();
+        }
         return WebApiBaseResult.success();
     }
 }

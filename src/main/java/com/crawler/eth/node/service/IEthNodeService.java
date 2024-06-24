@@ -78,4 +78,6 @@ public interface IEthNodeService {
     void obtainQuiliBalance() throws InterruptedException;
 
     void obtainQuiliBalance(EthNodeDetailModel ethNodeDetailModel);
+
+    void obtainQuiliBalance(Long detailId);
 }

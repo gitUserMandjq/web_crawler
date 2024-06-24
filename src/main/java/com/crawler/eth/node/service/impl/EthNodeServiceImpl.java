@@ -639,12 +639,15 @@ public class EthNodeServiceImpl implements IEthNodeService {
     @Override
     public void obtainQuiliBalance() throws InterruptedException {
         List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
-        ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(detailList.size(), 3);
+        ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(detailList.size(), 5);
         for (EthNodeDetailModel ethNodeDetailModel : detailList) {
             chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
                 @Override
                 public void run() {
-
+                    if(ethNodeDetailModel.getLastUpdateTime() != null
+                            && new Date().getTime() - ethNodeDetailModel.getLastUpdateTime().getTime() < 30 * 60 * 1000){
+                        return;
+                    }
                     obtainQuiliBalance(ethNodeDetailModel);
                 }
             });
@@ -666,25 +669,32 @@ public class EthNodeServiceImpl implements IEthNodeService {
                             if(pp.console.contains("Unclaimed balance")){
                                 pp.endFlag = true;
                                 String balance = pp.console.split("Unclaimed balance: ")[1].split(" QUIL")[0];
+                                String version = pp.console.split("Version: ")[1].split("\n")[0];
                                 ethNodeDetailModel.setComment(balance);
+                                ethNodeDetailModel.setVersion(version);
                                 ethNodeDetailModel.setLastUpdateTime(new Date());
                                 ethNodeDetailModel.setError("");
                                 System.out.println(ethNodeDetailModel.getNodeName()+":"+balance);
                             }else if(pp.console.contains("error getting node info")){
                                 pp.endFlag = true;
                                 ethNodeDetailModel.setError("error");
-                                ethNodeDetailModel.setLastUpdateTime(new Date());
+                                ethNodeDetailModel.setErrorTime(new Date());
                             }
                             break;
                     }
                     return "";
                 }
             });
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (JSchException e) {
-            e.printStackTrace();
+            ethNodeDetailModel.setError(e.getMessage());
+            ethNodeDetailModel.setErrorTime(new Date());
         }
         ethNodeDetailDao.save(ethNodeDetailModel);
+    }
+    @Override
+    public void obtainQuiliBalance(Long detailId) {
+        EthNodeDetailModel detail = ethNodeDetailDao.findById(detailId).get();
+        obtainQuiliBalance(detail);
     }
 }
