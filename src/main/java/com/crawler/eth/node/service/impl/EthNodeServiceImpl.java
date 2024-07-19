@@ -663,19 +663,23 @@ public class EthNodeServiceImpl implements IEthNodeService {
         }
         JSchUtil jSchUtil = connectToNode(node);
         String command = "sudo su\n" +
+//                "cd /root && wget -O Quili.sh https://raw.githubusercontent.com/a3165458/Quilibrium/main/Quili.sh && chmod +x Quili.sh\n" +
                 "cd /root && echo 6|./Quili.sh";
         try {
+            Date beginTime = new Date();
             String result = jSchUtil.execCommandByShell(command, new Function<JSchUtil.PrintProperty, String>() {
                 @Override
                 public String apply(JSchUtil.PrintProperty pp) {
                     switch (pp.stage){
                         case "0":
+                            if(pp.console.contains("Version")){
+                                String version = pp.console.split("Version: ")[1].split("\n")[0];
+                                ethNodeDetailModel.setVersion(version);
+                            }
                             if(pp.console.contains("Unclaimed balance")){
                                 pp.endFlag = true;
                                 String balance = pp.console.split("Unclaimed balance: ")[1].split(" QUIL")[0];
-                                String version = pp.console.split("Version: ")[1].split("\n")[0];
                                 ethNodeDetailModel.setComment(balance);
-                                ethNodeDetailModel.setVersion(version);
                                 ethNodeDetailModel.setLastUpdateTime(new Date());
                                 ethNodeDetailModel.setError("");
                                 System.out.println(ethNodeDetailModel.getNodeName()+":"+balance);
@@ -685,6 +689,12 @@ public class EthNodeServiceImpl implements IEthNodeService {
                                 ethNodeDetailModel.setErrorTime(new Date());
                             }
                             break;
+                        default:
+                            if(new Date().getTime() - beginTime.getTime() >= 30000L){
+                                pp.endFlag = true;
+                                ethNodeDetailModel.setError("请求超时");
+                                ethNodeDetailModel.setErrorTime(new Date());
+                            }
                     }
                     return "";
                 }
