@@ -39,6 +39,8 @@ public interface IEthNodeService {
 
     void update(EthNodeModel node);
 
+    void update(EthNodeDetailModel node);
+
     /**
      * 停止shardeum节点
      * @param client

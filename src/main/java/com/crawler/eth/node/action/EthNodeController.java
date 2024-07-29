@@ -4,6 +4,7 @@ import com.crawler.account.model.CrawlerClientInfo;
 import com.crawler.account.pool.CrawlerClientPool;
 import com.crawler.base.common.model.WebApiBaseResult;
 import com.crawler.base.utils.OkHttpClientUtil;
+import com.crawler.base.utils.PushUtils;
 import com.crawler.base.utils.StringUtils;
 import com.crawler.base.utils.ThreadUtils;
 import com.crawler.eth.node.model.EthNodeDetailModel;
@@ -158,12 +159,16 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult dealIonetNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
         ethBrowserService.ionetRefreshToken(1L);
-        List<EthNodeModel> list = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_IONET);
-        for(EthNodeModel node:list){
+        List<EthNodeDetailModel> list = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_IONET);
+        for(EthNodeDetailModel node:list){
+            String state = node.getState();
             ethBrowserService.getionetDeviceStatus(node);
-            if(!"up".equals(node.getState())){
-                ethNodeService.restartIonetNode(node);
+            if(!"up".equals(node.getState()) && !node.getState().equals(state)){
+                PushUtils.pushMessageByWxPusher("节点:" + node.getNodeName(), "节点不在线");
             }
+//            if(!"up".equals(node.getState())){
+//                ethNodeService.restartIonetNode(node);
+//            }
         }
         return WebApiBaseResult.success(list);
     }

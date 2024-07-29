@@ -34,4 +34,14 @@ public class EthNodeDetailModel {
     private Date errorTime;//最后更新时间
     @Column(name="version")
     private String version;//节点类型
+    @Column(name="browserId")
+    private Long browserId;//
+    @Column(name="deviceId")
+    private String deviceId;//
+    @Column(name="data")
+    private String data;//
+    @Column(name="state")
+    private String state;//状态
+    @Column(name="lastStopTime")
+    private Date lastStopTime;//最后停止时间
 }

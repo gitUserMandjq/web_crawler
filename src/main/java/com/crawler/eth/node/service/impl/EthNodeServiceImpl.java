@@ -88,6 +88,11 @@ public class EthNodeServiceImpl implements IEthNodeService {
         node.setLastUpdateTime(new Date());
         ethNodeDao.save(node);
     }
+    @Override
+    public void update(EthNodeDetailModel node) {
+        node.setLastUpdateTime(new Date());
+        ethNodeDetailDao.save(node);
+    }
 
     /**
      * 停止shardeum节点

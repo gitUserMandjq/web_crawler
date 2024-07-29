@@ -4,6 +4,7 @@ import com.crawler.base.utils.JsonUtil;
 import com.crawler.base.utils.OkHttpClientUtil;
 import com.crawler.eth.node.dao.EthBrowserDao;
 import com.crawler.eth.node.model.EthBrowserModel;
+import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthBrowserService;
 import com.crawler.eth.node.service.IEthNodeService;
@@ -87,7 +88,7 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
      * @throws IOException
      */
     @Override
-    public void getionetDeviceStatus(EthNodeModel node) throws IOException {
+    public void getionetDeviceStatus(EthNodeDetailModel node) throws IOException {
         EthBrowserModel browser = ethBrowserDao.getById(node.getBrowserId());
         Map<String, Object> session = JsonUtil.string2Obj(browser.getData());
         String access_token = (String) session.get("access_token");
