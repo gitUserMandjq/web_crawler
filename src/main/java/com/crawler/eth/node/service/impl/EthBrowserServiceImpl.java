@@ -13,6 +13,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -40,9 +41,10 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
      * @throws IOException
      */
     @Override
+    @Deprecated
     public void ionetRefreshToken(Long id) throws IOException {
         EthBrowserModel browser = ethBrowserDao.getById(id);
-        Map<String, Object> session = JsonUtil.string2Obj(browser.getData());
+        Map<String, Object> session = JsonUtil.string2Obj(browser.getSession());
         String refresh_token = (String) session.get("refresh_token");
         Map<String, Object> o = JsonUtil.string2Obj(browser.getCookies());
         OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient(proxy).cookieJar(OkHttpClientUtil.getCookieJar("id.io.net", o)).build();
@@ -77,9 +79,11 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
         browser.setCookies(JsonUtil.object2String(cookieMap));
         String result = response.body().string();
         log.info("请求结果:{}", result);
-        browser.setData(result);
-        browser.setLastUpdateTime(new Date());
-        ethBrowserDao.save(browser);
+        if(!StringUtils.isEmpty(result)){
+            browser.setSession(result);
+            browser.setLastUpdateTime(new Date());
+            ethBrowserDao.save(browser);
+        }
     }
 
     /**
@@ -88,102 +92,114 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
      * @throws IOException
      */
     @Override
-    public void getionetDeviceStatus(EthNodeDetailModel node) throws IOException {
+    public void getionetDeviceStatus(EthNodeDetailModel node) {
         EthBrowserModel browser = ethBrowserDao.getById(node.getBrowserId());
-        Map<String, Object> session = JsonUtil.string2Obj(browser.getData());
-        String access_token = (String) session.get("access_token");
-        OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient(proxy).build();
+        Map<String, Object> session = null;
+        try {
+            session = JsonUtil.string2Obj(browser.getSession());
+            String access_token = (String) session.get("access_token");
+            OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient(proxy).build();
 //        MediaType mediaType = MediaType.parse("text/plain");
 //        RequestBody body = RequestBody.create(mediaType, "");
-        Request request = new Request.Builder()
-                .url("https://api.io.solutions/v1/io-worker/devices/" + node.getDeviceId() + "/details")
-                .get()
-                .addHeader("accept", "application/json, text/plain, */*")
-                .addHeader("accept-language", "zh-CN,zh;q=0.9")
-                .addHeader("origin", "https://cloud.io.net")
-                .addHeader("priority", "u=1, i")
-                .addHeader("referer", "https://cloud.io.net/")
-                .addHeader("sec-ch-ua", "\"Google Chrome\";v=\"125\", \"Chromium\";v=\"125\", \"Not.A/Brand\";v=\"24\"")
-                .addHeader("sec-ch-ua-mobile", "?0")
-                .addHeader("sec-ch-ua-platform", "\"Windows\"")
-                .addHeader("sec-fetch-dest", "empty")
-                .addHeader("sec-fetch-mode", "cors")
-                .addHeader("sec-fetch-site", "cross-site")
-                .addHeader("token", access_token)
-                .addHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
-                .build();
-        Response response = client.newCall(request).execute();
-        String result = response.body().string();
-        //{
-        //    "status": "succeeded",
-        //    "data": {
-        //        "device_id": "e7626461-3260-4c1f-a2e2-f9189eed5d0e",
-        //        "hardware_quantity": 1,
-        //        "heartbeat_id": "e7626461-3260-4c1f-a2e2-f9189eed5d0e",
-        //        "start_date": "2024-04-02 02:56:55",
-        //        "status": "up",
-        //        "device_type": "gpu",
-        //        "operating_system": "Linux",
-        //        "security_soc2": false,
-        //        "location_name": "United States",
-        //        "location_icon": null,
-        //        "iso2": "US",
-        //        "brand_icon": "https://mxtfdkppxyflmmglullf.supabase.co/storage/v1/object/public/icons/nvidia.svg?t=2023-09-05T21%3A52%3A29.736Z",
-        //        "brand_name": "NVIDIA",
-        //        "hardware_name": "GeForce RTX 4060",
-        //        "download_speed_mbps": 617.0,
-        //        "upload_speed_mbps": 71.0,
-        //        "base_tier_name": "High Speed",
-        //        "jobs": [],
-        //        "down_percentage": 112,
-        //        "downtime_by_date": {
-        //            "2024-04-03": {
-        //                "downtime": 3663.8226130000003,
-        //                "note": "down for 1 hours and 1 minutes"
-        //            },
-        //            "2024-04-05": {
-        //                "downtime": 3786.9636649999998,
-        //                "note": "down for 1 hours and 3 minutes"
-        //            },
-        //            "2024-04-06": {
-        //                "downtime": 20034.104358,
-        //                "note": "down for 5 hours and 33 minutes"
-        //            },
-        //            "2024-04-08": {
-        //                "downtime": 7517.7227060000005,
-        //                "note": "down for 2 hours and 5 minutes"
-        //            },
-        //            "2024-04-09": {
-        //                "downtime": 1167.1871910000002,
-        //                "note": "down for 0 hours and 19 minutes"
-        //            },
-        //            "2024-04-10": {
-        //                "downtime": 54.39450000000001,
-        //                "note": "down for 0 hours and 0 minutes"
-        //            },
-        //            "2024-04-12": {
-        //                "downtime": 89337.98249,
-        //                "note": "down for 24 hours and 48 minutes"
-        //            },
-        //            "2024-04-13": {
-        //                "downtime": 33842.795513,
-        //                "note": "down for 9 hours and 24 minutes"
-        //            }
-        //        },
-        //        "supplier_name": "io.net",
-        //        "supplier_icon": "https://mxtfdkppxyflmmglullf.supabase.co/storage/v1/object/public/icons/io-net-logo-symbol-only-final.svg",
-        //        "is_active": true,
-        //        "busy_percent": 0.0
-        //    }
-        //}
-        log.info("请求结果:{}", result);
-        Map<String, Object> r = JsonUtil.string2Obj(result);
-        Map<String, Object> data = (Map<String, Object>) r.get("data");
-        node.setData(JsonUtil.object2String(data));
-        String status = (String) data.get("status");
-        node.setState(status);
-        if(!"up".equals(status)){
-            node.setLastStopTime(new Date());
+            String url = "https://api.io.solutions/v1/io-worker/devices/" + node.getDeviceId() + "/details";
+            log.info("url:{}, token:{}", url, access_token);
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .addHeader("authority", "api.io.solutions")
+                    .addHeader("accept", "application/json, text/plain, */*")
+                    .addHeader("accept-language", "zh-CN,zh;q=0.9")
+                    .addHeader("origin", "https://worker.io.net")
+                    .addHeader("referer", "https://worker.io.net/")
+                    .addHeader("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"")
+                    .addHeader("sec-ch-ua-mobile", "?0")
+                    .addHeader("sec-ch-ua-platform", "\"Windows\"")
+                    .addHeader("sec-fetch-dest", "empty")
+                    .addHeader("sec-fetch-mode", "cors")
+                    .addHeader("sec-fetch-site", "cross-site")
+                    .addHeader("token", access_token)
+                    .addHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                    .build();
+            Response response = client.newCall(request).execute();
+            String result = response.body().string();
+            //{
+            //    "status": "succeeded",
+            //    "data": {
+            //        "device_id": "e7626461-3260-4c1f-a2e2-f9189eed5d0e",
+            //        "hardware_quantity": 1,
+            //        "heartbeat_id": "e7626461-3260-4c1f-a2e2-f9189eed5d0e",
+            //        "start_date": "2024-04-02 02:56:55",
+            //        "status": "up",
+            //        "device_type": "gpu",
+            //        "operating_system": "Linux",
+            //        "security_soc2": false,
+            //        "location_name": "United States",
+            //        "location_icon": null,
+            //        "iso2": "US",
+            //        "brand_icon": "https://mxtfdkppxyflmmglullf.supabase.co/storage/v1/object/public/icons/nvidia.svg?t=2023-09-05T21%3A52%3A29.736Z",
+            //        "brand_name": "NVIDIA",
+            //        "hardware_name": "GeForce RTX 4060",
+            //        "download_speed_mbps": 617.0,
+            //        "upload_speed_mbps": 71.0,
+            //        "base_tier_name": "High Speed",
+            //        "jobs": [],
+            //        "down_percentage": 112,
+            //        "downtime_by_date": {
+            //            "2024-04-03": {
+            //                "downtime": 3663.8226130000003,
+            //                "note": "down for 1 hours and 1 minutes"
+            //            },
+            //            "2024-04-05": {
+            //                "downtime": 3786.9636649999998,
+            //                "note": "down for 1 hours and 3 minutes"
+            //            },
+            //            "2024-04-06": {
+            //                "downtime": 20034.104358,
+            //                "note": "down for 5 hours and 33 minutes"
+            //            },
+            //            "2024-04-08": {
+            //                "downtime": 7517.7227060000005,
+            //                "note": "down for 2 hours and 5 minutes"
+            //            },
+            //            "2024-04-09": {
+            //                "downtime": 1167.1871910000002,
+            //                "note": "down for 0 hours and 19 minutes"
+            //            },
+            //            "2024-04-10": {
+            //                "downtime": 54.39450000000001,
+            //                "note": "down for 0 hours and 0 minutes"
+            //            },
+            //            "2024-04-12": {
+            //                "downtime": 89337.98249,
+            //                "note": "down for 24 hours and 48 minutes"
+            //            },
+            //            "2024-04-13": {
+            //                "downtime": 33842.795513,
+            //                "note": "down for 9 hours and 24 minutes"
+            //            }
+            //        },
+            //        "supplier_name": "io.net",
+            //        "supplier_icon": "https://mxtfdkppxyflmmglullf.supabase.co/storage/v1/object/public/icons/io-net-logo-symbol-only-final.svg",
+            //        "is_active": true,
+            //        "busy_percent": 0.0
+            //    }
+            //}
+            log.info("请求结果:{}", result);
+            Map<String, Object> r = JsonUtil.string2Obj(result);
+            if(!r.containsKey("data")){
+                throw new Exception("格式返回错误");
+            }
+            Map<String, Object> data = (Map<String, Object>) r.get("data");
+            node.setData(JsonUtil.object2String(data));
+            String status = (String) data.get("status");
+            node.setState(status);
+            if(!"up".equals(status)){
+                node.setLastStopTime(new Date());
+            }
+        } catch (Exception e) {
+            log.info(e.getMessage(), e);
+            node.setState("error");
+            node.setError(e.getMessage());
         }
         ethNodeService.update(node);
     }

@@ -91,7 +91,7 @@ public class EthNodeController {
     @RequestMapping("/getionetNodeList")
     @ResponseBody
     public WebApiBaseResult getionetNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
-        List<EthNodeModel> ethNodeModels = ethNodeService.listNodeByNodeType(EthNodeModel.NODETYPE_IONET);
+        List<EthNodeDetailModel> ethNodeModels = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_IONET);
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
@@ -158,7 +158,7 @@ public class EthNodeController {
     @RequestMapping("/dealIonetNodeList")
     @ResponseBody
     public WebApiBaseResult dealIonetNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
-        ethBrowserService.ionetRefreshToken(1L);
+//        ethBrowserService.ionetRefreshToken(1L);
         List<EthNodeDetailModel> list = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_IONET);
         for(EthNodeDetailModel node:list){
             String state = node.getState();

@@ -29,6 +29,8 @@ public class EthBrowserModel {
     private String data;//数据
     @Column(name="cookies")
     private String cookies;//cookies
+    @Column(name="session")
+    private String session;//数据
 
     @Column(name="lastUpdateTime")
     private Date lastUpdateTime;//最后更新时间

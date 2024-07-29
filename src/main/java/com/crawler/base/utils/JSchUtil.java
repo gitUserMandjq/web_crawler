@@ -4,6 +4,7 @@ import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -16,6 +17,7 @@ public class JSchUtil {
     private String username;   // 账号
     private String password;   // 密码
     private int port;  // 端口号
+    private String proxy;
 
     Session session;
 
@@ -24,6 +26,13 @@ public class JSchUtil {
         this.username = username;
         this.password = password;
         this.port = port;
+    }
+    public JSchUtil(String ipAddress, String username, String password, int port, String proxy) {
+        this.ipAddress = ipAddress;
+        this.username = username;
+        this.password = password;
+        this.port = port;
+        this.proxy = proxy;
     }
 
     /**
@@ -44,10 +53,14 @@ public class JSchUtil {
             if (session == null) {
                 throw new Exception("session is null");
             }
+            if(!StringUtils.isEmpty(proxy)){
+                String[] split = proxy.split(":");
+                session.setProxy(new ProxyHTTP(split[0], Integer.valueOf(split[1])));
+            }
             //设置首次登录跳过主机检查
             session.setConfig("StrictHostKeyChecking", "no");
             //设置登录超时时间
-            session.connect(3000);
+            session.connect(60000);
         } catch (Exception e) {
             log.error(e.getMessage(),e);
         }
@@ -253,7 +266,7 @@ public class JSchUtil {
         ChannelShell channelShell = (ChannelShell) session.openChannel("shell");
         InputStream inputStream = channelShell.getInputStream();//从远端到达的数据  都能从这个流读取到
         channelShell.setPty(true);
-        channelShell.connect(3000);
+        channelShell.connect(60000);
 
         OutputStream outputStream = channelShell.getOutputStream();//写入该流的数据  都将发送到远程端
         //使用PrintWriter 就是为了使用println 这个方法
@@ -327,8 +340,7 @@ public class JSchUtil {
         ChannelShell channelShell = (ChannelShell) session.openChannel("shell");
         InputStream inputStream = channelShell.getInputStream();//从远端到达的数据  都能从这个流读取到
         channelShell.setPty(true);
-        channelShell.connect(3000);
-
+        channelShell.connect(60000);
         OutputStream outputStream = channelShell.getOutputStream();//写入该流的数据  都将发送到远程端
         //使用PrintWriter 就是为了使用println 这个方法
         //好处就是不需要每次手动给字符加\n

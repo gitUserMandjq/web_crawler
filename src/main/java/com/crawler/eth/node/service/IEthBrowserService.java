@@ -6,7 +6,8 @@ import com.crawler.eth.node.model.EthNodeModel;
 import java.io.IOException;
 
 public interface IEthBrowserService {
+    @Deprecated
     void ionetRefreshToken(Long id) throws IOException;
 
-    void getionetDeviceStatus(EthNodeDetailModel node) throws IOException;
+    void getionetDeviceStatus(EthNodeDetailModel node) ;
 }

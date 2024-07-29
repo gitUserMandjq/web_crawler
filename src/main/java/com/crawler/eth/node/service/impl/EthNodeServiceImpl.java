@@ -9,6 +9,7 @@ import com.crawler.eth.node.service.IEthNodeService;
 import com.jcraft.jsch.JSchException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -26,6 +27,8 @@ public class EthNodeServiceImpl implements IEthNodeService {
     EthNodeDao ethNodeDao;
     @Resource
     EthNodeDetailDao ethNodeDetailDao;
+    @Value("${common.proxy:}")
+    String proxy;
     /**
      * 获得节点信息
      * @param nodeType
@@ -256,7 +259,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
         int port = 22;
         log.info("连接节点:{},{},{}", node.getName(), node.getIndexNum(), node.getUrl());
         JSchUtil jSchUtil = null;
-        jSchUtil = new JSchUtil(node.getUrl(), node.getAdmin(), node.getPassword(), port);
+        jSchUtil = new JSchUtil(node.getUrl(), node.getAdmin(), node.getPassword(), port, proxy);
         return jSchUtil;
     }
 
