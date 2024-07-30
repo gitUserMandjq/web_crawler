@@ -164,7 +164,7 @@ public class EthNodeController {
             String state = node.getState();
             ethBrowserService.getionetDeviceStatus(node);
             if(!"up".equals(node.getState()) && !node.getState().equals(state)){
-                PushUtils.pushMessageByWxPusher("节点:" + node.getNodeName(), "节点不在线");
+                PushUtils.pushMessageByWxPusher("节点:" + node.getNodeName(), node.getError());
             }
 //            if(!"up".equals(node.getState())){
 //                ethNodeService.restartIonetNode(node);
