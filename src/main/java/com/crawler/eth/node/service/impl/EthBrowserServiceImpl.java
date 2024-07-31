@@ -210,6 +210,7 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
             }
             node.setState(status);
             if(!"up".equals(status)){
+                node.setError("节点不在线");
                 node.setLastStopTime(new Date());
             }
         } catch (Exception e) {
