@@ -101,7 +101,7 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
             OkHttpClient client = OkHttpClientUtil.getUnsafeOkHttpClient(proxy).build();
 //        MediaType mediaType = MediaType.parse("text/plain");
 //        RequestBody body = RequestBody.create(mediaType, "");
-            String url = "https://api.io.solutions/v1/io-worker/devices/" + node.getDeviceId() + "/details";
+            String url = "https://api.io.solutions/v1/io-worker/devices/" + node.getDeviceId() + "/summary";
             log.info("url:{}, token:{}", url, access_token);
             Request request = new Request.Builder()
                     .url(url)
@@ -125,63 +125,75 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
             //{
             //    "status": "succeeded",
             //    "data": {
-            //        "device_id": "e7626461-3260-4c1f-a2e2-f9189eed5d0e",
-            //        "hardware_quantity": 1,
-            //        "heartbeat_id": "e7626461-3260-4c1f-a2e2-f9189eed5d0e",
-            //        "start_date": "2024-04-02 02:56:55",
+            //        "device_id": "5acd1666-6cf7-4732-b98e-87af45e46da1",
+            //        "device_name": "posdao-windows-1",
             //        "status": "up",
-            //        "device_type": "gpu",
-            //        "operating_system": "Linux",
-            //        "security_soc2": false,
-            //        "location_name": "United States",
-            //        "location_icon": null,
-            //        "iso2": "US",
-            //        "brand_icon": "https://mxtfdkppxyflmmglullf.supabase.co/storage/v1/object/public/icons/nvidia.svg?t=2023-09-05T21%3A52%3A29.736Z",
-            //        "brand_name": "NVIDIA",
-            //        "hardware_name": "GeForce RTX 4060",
-            //        "download_speed_mbps": 617.0,
-            //        "upload_speed_mbps": 71.0,
-            //        "base_tier_name": "High Speed",
-            //        "jobs": [],
-            //        "down_percentage": 112,
+            //        "status_duration": "0 days 21:40:30",
+            //        "is_working": false,
+            //        "last_audit_successful": true,
+            //        "last_challenge_successful": false,
+            //        "total_download_traffic": 1764.0,
+            //        "total_upload_traffic": 640.0,
+            //        "total_compute_hours_served": 0,
+            //        "total_jobs": 1,
+            //        "total_earnings": 0.0,
+            //        "total_earnings_io_coin": 0.0,
+            //        "total_slashed_earnings": 0.0,
+            //        "total_slahed_io_coin": 0.0,
+            //        "download_speed_mbps": 96.0,
+            //        "upload_speed_mbps": 61.0,
+            //        "connectivity_tier": 1,
+            //        "down_percentage": 14,
             //        "downtime_by_date": {
-            //            "2024-04-03": {
-            //                "downtime": 3663.8226130000003,
-            //                "note": "down for 1 hours and 1 minutes"
+            //            "2024-07-14": {
+            //                "downtime": 264.700717,
+            //                "note": "down for 0 hours and 4 minutes"
             //            },
-            //            "2024-04-05": {
-            //                "downtime": 3786.9636649999998,
-            //                "note": "down for 1 hours and 3 minutes"
+            //            "2024-07-18": {
+            //                "downtime": 118.053549,
+            //                "note": "down for 0 hours and 1 minutes"
             //            },
-            //            "2024-04-06": {
-            //                "downtime": 20034.104358,
-            //                "note": "down for 5 hours and 33 minutes"
+            //            "2024-07-19": {
+            //                "downtime": 183.017841,
+            //                "note": "down for 0 hours and 3 minutes"
             //            },
-            //            "2024-04-08": {
-            //                "downtime": 7517.7227060000005,
-            //                "note": "down for 2 hours and 5 minutes"
+            //            "2024-07-20": {
+            //                "downtime": 246.150837,
+            //                "note": "down for 0 hours and 4 minutes"
             //            },
-            //            "2024-04-09": {
-            //                "downtime": 1167.1871910000002,
-            //                "note": "down for 0 hours and 19 minutes"
+            //            "2024-07-21": {
+            //                "downtime": 48899.985549,
+            //                "note": "down for 13 hours and 34 minutes"
             //            },
-            //            "2024-04-10": {
-            //                "downtime": 54.39450000000001,
-            //                "note": "down for 0 hours and 0 minutes"
+            //            "2024-07-22": {
+            //                "downtime": 5766.763967999999,
+            //                "note": "down for 1 hours and 36 minutes"
             //            },
-            //            "2024-04-12": {
-            //                "downtime": 89337.98249,
-            //                "note": "down for 24 hours and 48 minutes"
+            //            "2024-07-24": {
+            //                "downtime": 70619.993505,
+            //                "note": "down for 19 hours and 36 minutes"
             //            },
-            //            "2024-04-13": {
-            //                "downtime": 33842.795513,
-            //                "note": "down for 9 hours and 24 minutes"
+            //            "2024-07-25": {
+            //                "downtime": 86399.999999,
+            //                "note": "down for 23 hours and 59 minutes"
+            //            },
+            //            "2024-07-26": {
+            //                "downtime": 5523.751646,
+            //                "note": "down for 1 hours and 32 minutes"
+            //            },
+            //            "2024-07-27": {
+            //                "downtime": 9119.99375,
+            //                "note": "down for 2 hours and 31 minutes"
+            //            },
+            //            "2024-07-28": {
+            //                "downtime": 86399.999999,
+            //                "note": "down for 23 hours and 59 minutes"
+            //            },
+            //            "2024-07-29": {
+            //                "downtime": 38706.475751,
+            //                "note": "down for 10 hours and 45 minutes"
             //            }
-            //        },
-            //        "supplier_name": "io.net",
-            //        "supplier_icon": "https://mxtfdkppxyflmmglullf.supabase.co/storage/v1/object/public/icons/io-net-logo-symbol-only-final.svg",
-            //        "is_active": true,
-            //        "busy_percent": 0.0
+            //        }
             //    }
             //}
             log.info("请求结果:{}", result);
@@ -192,6 +204,10 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
             Map<String, Object> data = (Map<String, Object>) r.get("data");
             node.setData(JsonUtil.object2String(data));
             String status = (String) data.get("status");
+            Boolean is_working = (Boolean) data.get("last_challenge_successful");
+            if(!is_working){
+                status += "(notWorking)";
+            }
             node.setState(status);
             if(!"up".equals(status)){
                 node.setLastStopTime(new Date());
