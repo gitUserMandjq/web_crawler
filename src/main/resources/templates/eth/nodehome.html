@@ -121,6 +121,9 @@
                 + "<th>节点</th>"
                 + "<th>地址</th>"
                 + "<th>状态</th>"
+                + "<th>Earnings</th>"
+                + "<th>SHM staked</th>"
+                + "<th>版本</th>"
                 + "<th>最后更新时间</th>"
                 + "<th>最后停止时间</th>"
                 + "<th>最后重启时间</th>";
@@ -131,6 +134,9 @@
                 html += "<td>"+node["name"]+"</td>"
                     + "<td>"+node["url"]+"</a></td>"
                     + "<td>"+node["state"]+"</td>"
+                    + "<td>"+JSON.parse(node["data"])["currentRewards"]+"SHM</td>"
+                + "<td>"+JSON.parse(node["data"])["lockedStake"]+"SHM</td>"
+                    + "<td>"+node["version"]+"</td>"
                     + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
                     + "<td>"+getDateStr(node["lastStopTime"])+"</td>"
                     + "<td>"+getDateStr(node["lastStartTime"])+"</td>";
@@ -174,7 +180,7 @@
         if(date == null){
             return "";
         }
-        return new Date(date).getLocalTime(8).format("yyyy-MM-dd HH:mm:ss")
+        return new Date(date).getLocalTime(0).format("yyyy-MM-dd HH:mm:ss")
     }
     function isError(result){
         if("200" == result.statusCode){

@@ -161,11 +161,7 @@ public class EthNodeController {
 //        ethBrowserService.ionetRefreshToken(1L);
         List<EthNodeDetailModel> list = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_IONET);
         for(EthNodeDetailModel node:list){
-            String state = node.getState();
             ethBrowserService.getionetDeviceStatus(node);
-            if(!"up".equals(node.getState()) && !node.getState().equals(state)){
-                PushUtils.pushMessageByWxPusher("节点:" + node.getNodeName(), node.getError());
-            }
 //            if(!"up".equals(node.getState())){
 //                ethNodeService.restartIonetNode(node);
 //            }

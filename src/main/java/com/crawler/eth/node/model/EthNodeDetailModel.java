@@ -44,4 +44,6 @@ public class EthNodeDetailModel {
     private String state;//状态
     @Column(name="lastStopTime")
     private Date lastStopTime;//最后停止时间
+    @Column(name="lastRemindTime")
+    private Date lastRemindTime;//最后提醒时间
 }
