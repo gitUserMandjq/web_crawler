@@ -2,6 +2,7 @@ package com.crawler.eth.node.service.impl;
 
 import com.crawler.base.utils.JsonUtil;
 import com.crawler.base.utils.OkHttpClientUtil;
+import com.crawler.base.utils.PushUtils;
 import com.crawler.eth.node.dao.EthBrowserDao;
 import com.crawler.eth.node.model.EthBrowserModel;
 import com.crawler.eth.node.model.EthNodeDetailModel;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.SocketAddress;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
@@ -92,7 +94,8 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
      * @throws IOException
      */
     @Override
-    public void getionetDeviceStatus(EthNodeDetailModel node) {
+    public void getionetDeviceStatus(EthNodeDetailModel node) throws IOException {
+        String oldState = node.getState();
         EthBrowserModel browser = ethBrowserDao.getById(node.getBrowserId());
         Map<String, Object> session = null;
         try {
@@ -209,14 +212,21 @@ public class EthBrowserServiceImpl implements IEthBrowserService {
                 status += "(notWorking)";
             }
             node.setState(status);
-            if(!"up".equals(status)){
-                node.setError("节点不在线");
+            SimpleDateFormat yyyyMMddHHmmss = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            if(!"up".equals(status) && !oldState.equals(status)){
+                node.setError("节点不在线,状态：" + status + ",时间:"+yyyyMMddHHmmss.format(new Date()));
                 node.setLastStopTime(new Date());
             }
         } catch (Exception e) {
             log.info(e.getMessage(), e);
             node.setState("error");
             node.setError(e.getMessage());
+        }
+        if(!"up".equals(node.getState()) && (!node.getState().equals(oldState)
+                || node.getLastRemindTime() == null || new Date().getTime() - node.getLastRemindTime().getTime() >= 60*60*1000)){
+            //节点状态不是工作，或者每小时提醒一次
+            node.setLastRemindTime(new Date());
+            PushUtils.pushMessageByWxPusher("节点:" + node.getNodeName(), node.getError());
         }
         ethNodeService.update(node);
     }

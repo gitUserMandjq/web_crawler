@@ -9,5 +9,5 @@ public interface IEthBrowserService {
     @Deprecated
     void ionetRefreshToken(Long id) throws IOException;
 
-    void getionetDeviceStatus(EthNodeDetailModel node) ;
+    void getionetDeviceStatus(EthNodeDetailModel node) throws IOException;
 }
