@@ -1,16 +1,29 @@
 package com.crawler.base.utils;
 
+import ai.djl.Application;
+import io.github.bonigarcia.wdm.managers.ChromeDriverManager;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptException;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.Date;
 import java.util.Properties;
+import java.util.Set;
+
 @Slf4j
 public class DriverUtils {
 
     private final static String driver = "webdriver.chrome.driver";
     private static String chromeDriver = "D://ruanjian//chromedriver_win32//chromedriver.exe";
+//    private static String chromeDriver = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+
     private static String openCvDll = "D:\\ruanjian\\opencv\\build\\java\\x64\\opencv_java460.dll";
 
     public static final int min_port = 1000;
@@ -35,13 +48,22 @@ public class DriverUtils {
     public static ChromeDriverWapper buildDriver(){
         return buildDriver(getUsedPort());
     }
+    public static ChromeDriverWapper buildDriver(String dataDir){
+        return buildDriver(getUsedPort(), dataDir);
+    }
     public static ChromeDriverWapper buildDriver(int port){
+        return buildDriver(port, "");
+    }
+    public static ChromeDriverWapper buildDriver(int port, String dataDir){
+        ChromeDriverManager.getInstance().setup();
         ChromeOptions option = new ChromeOptions();
         option.addArguments("no-sandbox");//禁用沙盒
         option.addArguments("start-maximized");//最大化
+        option.addArguments("user-data-dir="+dataDir);
+        option.addArguments("--disable-blink-features=AutomationControlled");
         //通过ChromeOptions的setExperimentalOption方法，传下面两个参数来禁止掉谷歌受自动化控制的信息栏
-//    option.setExperimentalOption("useAutomationExtension", false);
-//    option.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
+        option.setExperimentalOption("useAutomationExtension", false);
+        option.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
         return buildDriver(option, port);
     }
     public static ChromeDriverWapper buildDriver(ChromeOptions option, int port){
@@ -81,6 +103,80 @@ public class DriverUtils {
             }
         }
         return min_port;
+    }
+    public static void getUrl(ChromeDriverWapper driverWapper, String url){
+        if(!url.equals(driverWapper.getDriver().getCurrentUrl())){
+            driverWapper.getDriver().get(url);
+        }
+    }
+    public static void switchToWindows(ChromeDriverWapper driverWapper, String url){
+        switchToWindows(driverWapper, url, null);
+    }
+    public static void switchToWindows(ChromeDriverWapper driverWapper, String contain, String[] notContain){
+        driverWapper.getWait().until((dr) ->{
+            Set<String> windowHandles = dr.getWindowHandles();
+            for (Object o : windowHandles.toArray()) {
+                String currentUrl = "";
+                try {
+                    dr.switchTo().window((String) o);
+                    currentUrl = dr.getCurrentUrl();
+                } catch (JavascriptException e) {
+                    return false;
+                }
+                log.info("switchTo:{}", currentUrl);
+                if(currentUrl.contains(contain) && notContain(currentUrl, notContain)){
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+    private static boolean notContain(String url, String[] notContain){
+        if(notContain == null || notContain.length == 0){
+            return true;
+        }
+        for (String s : notContain) {
+            if(url.contains(s)){
+                return false;
+            }
+        }
+        return true;
+    }
+    public static void untilElement(ChromeDriverWapper driverWapper, By by){
+        Date beginTime = new Date();
+        try {
+            driverWapper.getWait().until(ExpectedConditions.presenceOfElementLocated(by));
+        } catch (Exception e) {
+            log.info(e.getMessage(), e);
+        }
+        log.info("url:{},waitTime:{}ms", driverWapper.getDriver().getCurrentUrl(), new Date().getTime() - beginTime.getTime());
+    }
+    public static WebElement getAndUntilElement(ChromeDriverWapper driverWapper, By by){
+        Date beginTime = new Date();
+        try {
+            driverWapper.getWait().until(ExpectedConditions.presenceOfElementLocated(by));
+        } catch (Exception e) {
+            log.info(e.getMessage(), e);
+        }
+        log.info("url:{},waitTime:{}ms", driverWapper.getDriver().getCurrentUrl(), new Date().getTime() - beginTime.getTime());
+        WebElement element = driverWapper.getDriver().findElement(by);
+        return element;
+    }
+    public static WebElement getElementByScript(ChromeDriverWapper driverWapper, String js){
+        WebElement element = (WebElement) driverWapper.getDriver().executeScript(js);
+        return element;
+    }
+    public static Object getObjectByScript(ChromeDriverWapper driverWapper, String js){
+        Object o = driverWapper.getDriver().executeScript(js);
+        return o;
+    }
+    public static WebElement getElementByScript(ChromeDriverWapper driverWapper, String js, WebElement e){
+        WebElement element = (WebElement) driverWapper.getDriver().executeScript(js, e);
+        return element;
+    }
+    public static void clearInput(WebElement element){
+        element.sendKeys(Keys.CONTROL+"a");
+        element.sendKeys(Keys.DELETE);
     }
     public static void main(String[] args) {
         System.out.println(portArr.length);
