@@ -671,7 +671,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
         }
         JSchUtil jSchUtil = connectToNode(node);
         String command = "sudo su\n" +
-                "cd /root && wget -O Quili.sh https://raw.githubusercontent.com/a3165458/Quilibrium/main/Quili.sh && chmod +x Quili.sh\n" +
+                //内地要使用下面的脚本
+                //cd /root && wget -O Quili.sh https://git.dadunode.com/smeb_y/Quilibrium/raw/branch/main/Quili.sh && chmod +x Quili.sh && ./Quili.sh
+//                "cd /root && wget -O Quili.sh https://raw.githubusercontent.com/a3165458/Quilibrium/main/Quili.sh && chmod +x Quili.sh\n" +
                 "cd /root && echo 6|./Quili.sh";
         try {
             Date beginTime = new Date();
