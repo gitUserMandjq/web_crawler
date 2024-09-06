@@ -46,4 +46,6 @@ public class EthNodeDetailModel {
     private Date lastStopTime;//最后停止时间
     @Column(name="lastRemindTime")
     private Date lastRemindTime;//最后提醒时间
+    @Column(name="enabled")
+    private Integer enabled;//是否可用
 }
