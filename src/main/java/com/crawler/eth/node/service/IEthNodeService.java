@@ -1,6 +1,7 @@
 package com.crawler.eth.node.service;
 
 import com.crawler.base.utils.JSchUtil;
+import com.crawler.base.utils.SSHClientUtil;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.jcraft.jsch.JSchException;
@@ -60,6 +61,8 @@ public interface IEthNodeService {
 
     JSchUtil connectToNode(EthNodeModel node);
 
+    SSHClientUtil connectToNodeSSHJ(EthNodeModel node);
+
     void restartShardeumNode(EthNodeModel node) throws IOException, JSchException;
 
     void restartIonetNode(EthNodeModel node) throws IOException, JSchException;
@@ -82,4 +85,6 @@ public interface IEthNodeService {
     void obtainQuiliBalance(EthNodeDetailModel ethNodeDetailModel);
 
     void obtainQuiliBalance(Long detailId);
+
+    void updateQuiliBalance(String nodeName, String version, String balance);
 }

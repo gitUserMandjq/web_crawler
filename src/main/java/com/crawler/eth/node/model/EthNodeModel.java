@@ -54,6 +54,8 @@ public class EthNodeModel {
     private String deviceId;//
     @Column(name="restartScript")
     private String restartScript;//
+    @Column(name="pem")
+    private String pem;//
 
     public static final String NODETYPE_SHARDEUM = "shardeum";
     public static final String NODETYPE_OPSIDE = "opside";

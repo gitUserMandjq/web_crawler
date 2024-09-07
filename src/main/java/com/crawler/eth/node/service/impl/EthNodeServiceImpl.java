@@ -1,5 +1,6 @@
 package com.crawler.eth.node.service.impl;
 
+import com.crawler.base.common.model.MyFunction;
 import com.crawler.base.utils.*;
 import com.crawler.eth.node.dao.EthNodeDao;
 import com.crawler.eth.node.dao.EthNodeDetailDao;
@@ -8,6 +9,7 @@ import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthNodeService;
 import com.jcraft.jsch.JSchException;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.expectit.Expect;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static net.sf.expectit.matcher.Matchers.regexp;
 
 @Service
 @Slf4j
@@ -261,6 +265,18 @@ public class EthNodeServiceImpl implements IEthNodeService {
         JSchUtil jSchUtil = null;
         jSchUtil = new JSchUtil(node.getUrl(), node.getAdmin(), node.getPassword(), port, proxy);
         return jSchUtil;
+    }
+    @Override
+    public SSHClientUtil connectToNodeSSHJ(EthNodeModel node) {
+        int port = 22;
+        log.info("连接节点:{},{},{}", node.getName(), node.getIndexNum(), node.getUrl());
+        SSHClientUtil clientUtil;
+        if(!StringUtils.isEmpty(node.getPem())){
+            clientUtil = new SSHClientUtil(node.getAdmin(),node.getUrl(),port,node.getPem());
+        }else{
+            clientUtil = new SSHClientUtil(node.getAdmin(), node.getPassword(),node.getUrl(),port);
+        }
+        return clientUtil;
     }
 
     /**
@@ -666,51 +682,49 @@ public class EthNodeServiceImpl implements IEthNodeService {
     public void obtainQuiliBalance(EthNodeDetailModel ethNodeDetailModel) {
         EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
         if(StringUtils.isEmpty(ethNodeDetailModel.getError())
-                && new Date().getTime() - ethNodeDetailModel.getLastUpdateTime().getTime() < 10*60*1000L){
+                && ethNodeDetailModel.getLastUpdateTime() != null && new Date().getTime() - ethNodeDetailModel.getLastUpdateTime().getTime() < 10*60*1000L){
             return;
         }
-        JSchUtil jSchUtil = connectToNode(node);
-        String command = "sudo su\n" +
-                //内地要使用下面的脚本
-                //cd /root && wget -O Quili.sh https://git.dadunode.com/smeb_y/Quilibrium/raw/branch/main/Quili.sh && chmod +x Quili.sh && ./Quili.sh
-//                "cd /root && wget -O Quili.sh https://raw.githubusercontent.com/a3165458/Quilibrium/main/Quili.sh && chmod +x Quili.sh\n" +
-                "cd /root && echo 6|./Quili.sh";
+        SSHUtil sshClientUtil;
+        if(StringUtils.isEmpty(node.getPem())){
+            sshClientUtil = connectToNode(node);
+        }else{
+            sshClientUtil = connectToNodeSSHJ(node);
+        }
+
         try {
-            Date beginTime = new Date();
-            String result = jSchUtil.execCommandByShell(command, new Function<JSchUtil.PrintProperty, String>() {
+            sshClientUtil.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty, String>() {
                 @Override
-                public String apply(JSchUtil.PrintProperty pp) {
-                    switch (pp.stage){
-                        case "0":
-                            if(pp.console.contains("Version")){
-                                String version = pp.console.split("Version: ")[1].split("\n")[0];
+                public String apply(SSHClientUtil.PrintProperty e) throws Exception {
+                    Expect expect = e.expect;
+                    expect.sendLine("sudo su");
+                    expect.sendLine("cd /root && echo 6|./Quili.sh");
+                    expect.expect(new SSHClientUtil.MatchProxy(regexp("Unclaimed balance|error getting node info")){
+
+                        @Override
+                        public void dealInput(String console) {
+                            log.info("input:【{}】",console);
+                            if(console.contains("Version")){
+                                String version = console.split("Version: ")[1].split("\n")[0];
                                 ethNodeDetailModel.setVersion(version);
                             }
-                            if(pp.console.contains("Unclaimed balance")){
-                                pp.endFlag = true;
-                                String balance = pp.console.split("Unclaimed balance: ")[1].split(" QUIL")[0];
+                            if(console.contains("Unclaimed balance")){
+                                String balance = console.split("Unclaimed balance: ")[1].split(" QUIL")[0];
                                 ethNodeDetailModel.setComment(balance);
                                 ethNodeDetailModel.setLastUpdateTime(new Date());
                                 ethNodeDetailModel.setError("");
                                 System.out.println(ethNodeDetailModel.getNodeName()+":"+balance);
-                            }else if(pp.console.contains("error getting node info")){
-                                pp.endFlag = true;
+                            }else if(console.contains("error getting node info")){
                                 ethNodeDetailModel.setError("error");
                                 ethNodeDetailModel.setErrorTime(new Date());
                             }
-                            break;
-                        default:
-                            if(new Date().getTime() - beginTime.getTime() >= 30000L){
-                                pp.endFlag = true;
-                                ethNodeDetailModel.setError("请求超时");
-                                ethNodeDetailModel.setErrorTime(new Date());
-                            }
-                    }
-                    return "";
+                        }
+                    });
+                    return null;
                 }
             });
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
             ethNodeDetailModel.setError(e.getMessage());
             ethNodeDetailModel.setErrorTime(new Date());
         }
@@ -720,5 +734,15 @@ public class EthNodeServiceImpl implements IEthNodeService {
     public void obtainQuiliBalance(Long detailId) {
         EthNodeDetailModel detail = ethNodeDetailDao.findById(detailId).get();
         obtainQuiliBalance(detail);
+    }
+    @Override
+    public void updateQuiliBalance(String nodeName, String version, String balance) {
+        EthNodeDetailModel detail = ethNodeDetailDao.findByNodeName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
+        if(detail != null){
+            detail.setVersion(version);
+            detail.setComment(balance);
+            detail.setLastUpdateTime(new Date());
+            ethNodeDetailDao.save(detail);
+        }
     }
 }

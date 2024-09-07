@@ -233,4 +233,19 @@ public class EthNodeController {
         }
         return WebApiBaseResult.success();
     }
+    /**
+     * 获得Quili的余额
+     * @param httpSession
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/updateQuiliBalance")
+    @ResponseBody
+    public WebApiBaseResult updateQuiliBalance(@RequestParam(required = false, value = "nodeName") String nodeName,
+                                               @RequestParam(required = false, value = "version") String version,
+                                               @RequestParam(required = false, value = "balance") String balance) throws Exception {
+        ethNodeService.updateQuiliBalance(nodeName, version, balance);
+        return WebApiBaseResult.success();
+    }
 }
