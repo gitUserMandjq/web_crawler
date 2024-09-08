@@ -740,11 +740,16 @@ public class EthNodeServiceImpl implements IEthNodeService {
     public void updateQuiliBalance(String nodeName, String version, String balance) {
         EthNodeDetailModel detail = ethNodeDetailDao.findByNodeName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
         if(detail != null){
-            detail.setVersion(version);
-            detail.setComment(balance);
-            detail.setLastUpdateTime(new Date());
-            detail.setError("");
-            ethNodeDetailDao.save(detail);
+            if(!StringUtils.isEmpty(balance)){
+                detail.setVersion(version);
+                detail.setComment(balance);
+                detail.setLastUpdateTime(new Date());
+                detail.setError("");
+                ethNodeDetailDao.save(detail);
+            }else{
+                detail.setError("Error");
+                ethNodeDetailDao.save(detail);
+            }
         }
     }
     @Override
@@ -755,6 +760,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
             chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
                 @Override
                 public void run() throws InterruptedException {
+                    if(!ethNodeDetailModel.getNodeName().contains("Physical")){
+                        return;
+                    }
                     addQuiliMonitor(ethNodeDetailModel);
                 }
             });
