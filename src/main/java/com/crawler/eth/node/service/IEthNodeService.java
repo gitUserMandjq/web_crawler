@@ -87,4 +87,8 @@ public interface IEthNodeService {
     void obtainQuiliBalance(Long detailId);
 
     void updateQuiliBalance(String nodeName, String version, String balance);
+
+    void addQuiliMonitor() throws InterruptedException;
+
+    void addQuiliMonitor(EthNodeDetailModel ethNodeDetailModel);
 }

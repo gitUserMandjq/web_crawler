@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static net.sf.expectit.matcher.Matchers.contains;
 import static net.sf.expectit.matcher.Matchers.regexp;
 
 @Service
@@ -742,7 +743,54 @@ public class EthNodeServiceImpl implements IEthNodeService {
             detail.setVersion(version);
             detail.setComment(balance);
             detail.setLastUpdateTime(new Date());
+            detail.setError("");
             ethNodeDetailDao.save(detail);
+        }
+    }
+    @Override
+    public void addQuiliMonitor() throws InterruptedException {
+        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
+        ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(detailList.size(), 5);
+        for (EthNodeDetailModel ethNodeDetailModel : detailList) {
+            chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
+                @Override
+                public void run() throws InterruptedException {
+                    addQuiliMonitor(ethNodeDetailModel);
+                }
+            });
+        }
+        chokeLimitThreadPool.choke();
+    }
+    @Override
+    public void addQuiliMonitor(EthNodeDetailModel ethNodeDetailModel){
+        EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
+        SSHUtil sshClientUtil = connectToNodeSSHJ(node);
+
+        try {
+            sshClientUtil.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty, String>() {
+                @Override
+                public String apply(SSHClientUtil.PrintProperty e) throws Exception {
+                    Expect expect = e.expect;
+                    expect.sendLine("sudo su");
+                    expect.sendLine("cd /root");
+                    expect.sendLine(LinuxUtils.setEnvVars("nodeName", ethNodeDetailModel.getNodeName()));
+                    expect.sendLine(LinuxUtils.setEnvVars("monitorUrl", "204.12.203.253:82"));
+                    expect.sendLine(LinuxUtils.getNetScript("https://raw.githubusercontent.com/gitUserMandjq/linuxScript/master/blockchain/monitor/quilimonitor.sh"));
+                    //如果不加下面的代码可能导致下载个空文件
+                    expect.sendLine("ls");
+                    expect.expect(contains("quilimonitor"));
+                    expect.sendLine("apt install cron");
+                    expect.sendLine(LinuxUtils.enableCronLog());
+                    expect.sendLine(LinuxUtils.deleteCrontab("quilimonitor.sh"));
+                    expect.sendLine(LinuxUtils.addCrontab("*/5 * * * *", "/root/quilimonitor.sh", "/var/log/cron.log"));
+                    expect.sendLine("mkdir -p /root/backup");
+                    expect.sendLine(LinuxUtils.deleteCrontab("backup"));
+                    expect.sendLine(LinuxUtils.addCrontab("0 0 * * *", "cp -r ~/ceremonyclient/node/.config/store ~/backup/store_$(date +%Y%m%d)", "/var/log/cron.log"));
+                    return null;
+                }
+            });
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
     }
 }

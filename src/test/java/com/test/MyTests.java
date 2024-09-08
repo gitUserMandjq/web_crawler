@@ -63,7 +63,8 @@ class MyTests {
 //    String yml = monitorService.genereatePrometheusYml();
 //    System.out.println("sudo tee /root/monitoring/prometheus.yml > /dev/null << EOF\n"+yml+"EOF");
 //    monitorService.restartPrometheus();
-    ethNodeService.obtainQuiliBalance();
+//    ethNodeService.obtainQuiliBalance();
+    ethNodeService.addQuiliMonitor();
   }
 
   public static void main(String[] args) {
