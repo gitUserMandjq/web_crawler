@@ -180,7 +180,7 @@
         if(date == null){
             return "";
         }
-        return new Date(date).getLocalTime(0).format("yyyy-MM-dd HH:mm:ss")
+        return new Date(date).getLocalTime(8).format("yyyy-MM-dd HH:mm:ss")
     }
     function isError(result){
         if("200" == result.statusCode){
