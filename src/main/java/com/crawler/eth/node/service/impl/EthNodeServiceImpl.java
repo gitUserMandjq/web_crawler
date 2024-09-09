@@ -681,6 +681,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
     }
     @Override
     public void obtainQuiliBalance(EthNodeDetailModel ethNodeDetailModel) {
+        if(StringUtils.isEmpty(ethNodeDetailModel.getNodeId())){
+            return;
+        }
         EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
         if(StringUtils.isEmpty(ethNodeDetailModel.getError())
                 && ethNodeDetailModel.getLastUpdateTime() != null && new Date().getTime() - ethNodeDetailModel.getLastUpdateTime().getTime() < 10*60*1000L){
@@ -771,6 +774,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
     }
     @Override
     public void addQuiliMonitor(EthNodeDetailModel ethNodeDetailModel){
+        if(StringUtils.isEmpty(ethNodeDetailModel.getNodeId())){
+            return;
+        }
         EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
         SSHUtil sshClientUtil = connectToNodeSSHJ(node);
 
