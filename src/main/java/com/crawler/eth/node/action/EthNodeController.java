@@ -258,7 +258,7 @@ public class EthNodeController {
     @RequestMapping("/quiliDailyStat")
     @ResponseBody
     public WebApiBaseResult quiliDailyStat(HttpSession httpSession, HttpServletRequest request) throws Exception {
-        ethNodeService.quiliDailyStat(DateUtils.parseAndFormat(new Date(), "yyyy-MM-dd"));
+        ethNodeService.quiliDailyStat(DateUtils.addDays(DateUtils.parseAndFormat(new Date(), "yyyy-MM-dd"), -1));
         return WebApiBaseResult.success();
     }
 }

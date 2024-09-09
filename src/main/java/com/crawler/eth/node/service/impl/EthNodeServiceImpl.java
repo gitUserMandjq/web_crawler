@@ -13,6 +13,7 @@ import com.jcraft.jsch.JSchException;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.expectit.Expect;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -755,6 +756,11 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 detail.setLastUpdateTime(new Date());
                 detail.setError("");
                 ethNodeDetailDao.save(detail);
+                Date statDate = DateUtils.parseAndFormat(new Date(), "yyyy-MM-dd");
+                EthNodeDetailDailyStatModel stat = getEthNodeDetailDailyStatByStatDate(detail, statDate);
+                stat.setCurrentValue(new BigDecimal(balance));
+                stat.setLastUpdateTime(new Date());
+                ethNodeDetailDailyStatDao.save(stat);
             }else{
                 detail.setError("Error");
                 ethNodeDetailDao.save(detail);
@@ -824,31 +830,31 @@ public class EthNodeServiceImpl implements IEthNodeService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void quiliDailyStat(EthNodeDetailModel ethNodeDetailModel, Date statDate){
+        EthNodeDetailDailyStatModel stat = getEthNodeDetailDailyStatByStatDate(ethNodeDetailModel, statDate);
+        EthNodeDetailDailyStatModel lastDailyStat = ethNodeDetailDailyStatDao.findLastDailyStat(ethNodeDetailModel.getId(), statDate);
+        if(lastDailyStat != null){
+            stat.setLastValue(lastDailyStat.getCurrentValue());
+        }else{
+            stat.setLastValue(stat.getCurrentValue());
+        }
+        stat.setDiffValue(stat.getCurrentValue().subtract(stat.getLastValue()));
+        ethNodeDetailDailyStatDao.save(stat);
+        ethNodeDetailModel.setDiffValue(stat.getDiffValue());
+        ethNodeDetailDao.save(ethNodeDetailModel);
+    }
+
+    @NotNull
+    private EthNodeDetailDailyStatModel getEthNodeDetailDailyStatByStatDate(EthNodeDetailModel ethNodeDetailModel, Date statDate) {
         EthNodeDetailDailyStatModel stat = ethNodeDetailDailyStatDao.findByNodeDetailIdAndStatDate(ethNodeDetailModel.getId(), statDate);
         if(stat == null){
             stat = new EthNodeDetailDailyStatModel();
-            BigDecimal currentValue;
-            if(StringUtils.isEmpty(ethNodeDetailModel.getComment())){
-                currentValue = BigDecimal.valueOf(0);
-            }else{
-                currentValue = new BigDecimal(ethNodeDetailModel.getComment());
-            }
             stat.setNodeDetailId(ethNodeDetailModel.getId());
             stat.setNodeName(ethNodeDetailModel.getNodeName());
             stat.setNodeType(ethNodeDetailModel.getNodeType());
+            BigDecimal currentValue;
+            stat.setCurrentValue(BigDecimal.valueOf(0));
             stat.setStatDate(statDate);
-            stat.setCurrentValue(currentValue);
-            stat.setLastUpdateTime(new Date());
-            EthNodeDetailDailyStatModel lastDailyStat = ethNodeDetailDailyStatDao.findLastDailyStat(ethNodeDetailModel.getId(), statDate);
-            if(lastDailyStat != null){
-                stat.setLastValue(lastDailyStat.getCurrentValue());
-            }else{
-                stat.setLastValue(currentValue);
-            }
-            stat.setDiffValue(stat.getCurrentValue().subtract(stat.getLastValue()));
-            ethNodeDetailDailyStatDao.save(stat);
-            ethNodeDetailModel.setDiffValue(stat.getDiffValue());
-            ethNodeDetailDao.save(ethNodeDetailModel);
         }
+        return stat;
     }
 }
