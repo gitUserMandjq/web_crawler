@@ -3,10 +3,7 @@ package com.crawler.eth.node.action;
 import com.crawler.account.model.CrawlerClientInfo;
 import com.crawler.account.pool.CrawlerClientPool;
 import com.crawler.base.common.model.WebApiBaseResult;
-import com.crawler.base.utils.OkHttpClientUtil;
-import com.crawler.base.utils.PushUtils;
-import com.crawler.base.utils.StringUtils;
-import com.crawler.base.utils.ThreadUtils;
+import com.crawler.base.utils.*;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthBrowserService;
@@ -26,6 +23,8 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -246,6 +245,20 @@ public class EthNodeController {
                                                @RequestParam(required = false, value = "version") String version,
                                                @RequestParam(required = false, value = "balance") String balance) throws Exception {
         ethNodeService.updateQuiliBalance(nodeName, version, balance);
+        return WebApiBaseResult.success();
+    }
+
+    /**
+     * 统计每日余额
+     * @param httpSession
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping("/quiliDailyStat")
+    @ResponseBody
+    public WebApiBaseResult quiliDailyStat(HttpSession httpSession, HttpServletRequest request) throws Exception {
+        ethNodeService.quiliDailyStat(DateUtils.parseAndFormat(new Date(), "yyyy-MM-dd"));
         return WebApiBaseResult.success();
     }
 }

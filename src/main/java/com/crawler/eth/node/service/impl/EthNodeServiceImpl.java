@@ -3,7 +3,9 @@ package com.crawler.eth.node.service.impl;
 import com.crawler.base.common.model.MyFunction;
 import com.crawler.base.utils.*;
 import com.crawler.eth.node.dao.EthNodeDao;
+import com.crawler.eth.node.dao.EthNodeDetailDailyStatDao;
 import com.crawler.eth.node.dao.EthNodeDetailDao;
+import com.crawler.eth.node.model.EthNodeDetailDailyStatModel;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthNodeService;
@@ -13,9 +15,11 @@ import net.sf.expectit.Expect;
 import okhttp3.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -32,6 +36,8 @@ public class EthNodeServiceImpl implements IEthNodeService {
     EthNodeDao ethNodeDao;
     @Resource
     EthNodeDetailDao ethNodeDetailDao;
+    @Resource
+    EthNodeDetailDailyStatDao ethNodeDetailDailyStatDao;
     @Value("${common.proxy:}")
     String proxy;
     /**
@@ -805,6 +811,44 @@ public class EthNodeServiceImpl implements IEthNodeService {
             });
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+        }
+    }
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void quiliDailyStat(Date statDate){
+        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
+        for (EthNodeDetailModel ethNodeDetailModel : detailList) {
+            quiliDailyStat(ethNodeDetailModel, statDate);
+        }
+    }
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void quiliDailyStat(EthNodeDetailModel ethNodeDetailModel, Date statDate){
+        EthNodeDetailDailyStatModel stat = ethNodeDetailDailyStatDao.findByNodeDetailIdAndStatDate(ethNodeDetailModel.getId(), statDate);
+        if(stat == null){
+            stat = new EthNodeDetailDailyStatModel();
+            BigDecimal currentValue;
+            if(StringUtils.isEmpty(ethNodeDetailModel.getComment())){
+                currentValue = BigDecimal.valueOf(0);
+            }else{
+                currentValue = new BigDecimal(ethNodeDetailModel.getComment());
+            }
+            stat.setNodeDetailId(ethNodeDetailModel.getId());
+            stat.setNodeName(ethNodeDetailModel.getNodeName());
+            stat.setNodeType(ethNodeDetailModel.getNodeType());
+            stat.setStatDate(statDate);
+            stat.setCurrentValue(currentValue);
+            stat.setLastUpdateTime(new Date());
+            EthNodeDetailDailyStatModel lastDailyStat = ethNodeDetailDailyStatDao.findLastDailyStat(ethNodeDetailModel.getId(), statDate);
+            if(lastDailyStat != null){
+                stat.setLastValue(lastDailyStat.getCurrentValue());
+            }else{
+                stat.setLastValue(currentValue);
+            }
+            stat.setDiffValue(stat.getCurrentValue().subtract(stat.getLastValue()));
+            ethNodeDetailDailyStatDao.save(stat);
+            ethNodeDetailModel.setDiffValue(stat.getDiffValue());
+            ethNodeDetailDao.save(ethNodeDetailModel);
         }
     }
 }

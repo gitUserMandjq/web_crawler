@@ -6,10 +6,12 @@ import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.jcraft.jsch.JSchException;
 import okhttp3.OkHttpClient;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -91,4 +93,10 @@ public interface IEthNodeService {
     void addQuiliMonitor() throws InterruptedException;
 
     void addQuiliMonitor(EthNodeDetailModel ethNodeDetailModel);
+
+    @Transactional(rollbackFor = Exception.class)
+    void quiliDailyStat(Date statDate);
+
+    @Transactional(rollbackFor = Exception.class)
+    void quiliDailyStat(EthNodeDetailModel ethNodeDetailModel, Date statDate);
 }
