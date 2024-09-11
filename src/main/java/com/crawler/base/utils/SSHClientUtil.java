@@ -115,6 +115,7 @@ public class SSHClientUtil implements SSHUtil {
             Config config = myConfig;
             sshClient = new SSHClient(config);
             sshClient.addHostKeyVerifier(new PromiscuousVerifier());
+            sshClient.connect(host,port);
             if(!com.crawler.base.utils.StringUtils.isEmpty(proxy)){
                 String[] split = proxy.split(":");
                 sshClient.setSocketFactory(new ProxySocketFactory(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(split[0], Integer.valueOf(split[1])))));
