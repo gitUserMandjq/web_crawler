@@ -1,7 +1,9 @@
 package com.crawler.eth.node.service;
 
+import com.crawler.base.common.model.MyFunction;
 import com.crawler.base.utils.JSchUtil;
 import com.crawler.base.utils.SSHClientUtil;
+import com.crawler.base.utils.SSHUtil;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.jcraft.jsch.JSchException;
@@ -85,6 +87,12 @@ public interface IEthNodeService {
     void obtainQuiliBalance() throws InterruptedException;
 
     void obtainQuiliBalance(EthNodeDetailModel ethNodeDetailModel);
+
+    void dealSSHOrder(String nodeType, MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String> function) throws Exception;
+
+    void dealSSHOrder(String nodeType, MyFunction<EthNodeDetailModel, Boolean> filter, MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String> function, MyFunction<EthNodeDetailModel, String> callback) throws Exception;
+
+    void dealSSHOrder(EthNodeDetailModel ethNodeDetailModel, MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String> function);
 
     void obtainQuiliBalance(Long detailId);
 

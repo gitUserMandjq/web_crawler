@@ -1,6 +1,8 @@
 package com.crawler.base.utils;
 
 import com.crawler.base.common.model.MyFunction;
+import com.crawler.base.common.model.ProxySocketFactory;
+import com.jcraft.jsch.ProxyHTTP;
 import lombok.extern.slf4j.Slf4j;
 import net.schmizz.sshj.Config;
 import net.schmizz.sshj.SSHClient;
@@ -17,8 +19,12 @@ import net.sf.expectit.ExpectBuilder;
 import net.sf.expectit.Result;
 import net.sf.expectit.matcher.Matcher;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 
+import javax.net.SocketFactory;
 import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +46,7 @@ public class SSHClientUtil implements SSHUtil {
     private String host;
     //SFTP 端口
     private int port;
+    private String proxy;
 
 //    private SFTPClient sftpClient;
     private SSHClient sshClient;
@@ -54,6 +61,27 @@ public class SSHClientUtil implements SSHUtil {
         this.port = port;
     }
 
+    /**
+     * 构造基于密码认证的sftp对象
+     */
+    public SSHClientUtil(String username, String password, String host, int port, String proxy) {
+        this.username = username;
+        this.password = password;
+        this.host = host;
+        this.port = port;
+        this.proxy = proxy;
+    }
+
+    /**
+     * 构造基于秘钥认证的sftp对象
+     */
+    public SSHClientUtil(String username, String host, int port, String privateKey, String proxy) {
+        this.username = username;
+        this.host = host;
+        this.port = port;
+        this.privateKey = privateKey;
+        this.proxy = proxy;
+    }
     /**
      * 构造基于秘钥认证的sftp对象
      */
@@ -75,7 +103,6 @@ public class SSHClientUtil implements SSHUtil {
         try {
             // 没有特殊要求的忽略config 直接 SSHClient sshClient = new SSHClient();
             MyConfig myConfig = new MyConfig();
-
             // 设置CiphersFactories
             myConfig.setCiphersFactories("aes256-ctr,aes192-ctr,aes128-ctr,aes256-gcm@openssh.com,aes128-gcm@openssh.com");
             // 设置 MACsFactories
@@ -88,7 +115,10 @@ public class SSHClientUtil implements SSHUtil {
             Config config = myConfig;
             sshClient = new SSHClient(config);
             sshClient.addHostKeyVerifier(new PromiscuousVerifier());
-            sshClient.connect(host,port);
+            if(!com.crawler.base.utils.StringUtils.isEmpty(proxy)){
+                String[] split = proxy.split(":");
+                sshClient.setSocketFactory(new ProxySocketFactory(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(split[0], Integer.valueOf(split[1])))));
+            }
 
             // 密钥链接
             if(StringUtils.isNotBlank(privateKey)){
@@ -212,7 +242,11 @@ public class SSHClientUtil implements SSHUtil {
         return path += privateKey;
     }
     @Override
-    public String execCommandByShellExpect(MyFunction<PrintProperty, String> func) throws Exception {
+    public  <T>  String execCommandByShellExpect(MyFunction<PrintProperty<T>, String> func) throws Exception {
+        return execCommandByShellExpect(func, null);
+    }
+    @Override
+    public  <T>  String execCommandByShellExpect(MyFunction<PrintProperty<T>, String> func, T append) throws Exception {
 
         boolean isLogin = this.openConnection();
         if(isLogin){
@@ -235,6 +269,7 @@ public class SSHClientUtil implements SSHUtil {
         try {
             PrintProperty printProperty = new PrintProperty();
             printProperty.expect = expect;
+            printProperty.append = append;
             func.apply(printProperty);
 //            expect.expect(contains("[RETURN]"));
         }catch(Exception e){
@@ -307,7 +342,7 @@ public class SSHClientUtil implements SSHUtil {
         String password = "Huawei123@!";
         SSHClientUtil sftp = new SSHClientUtil(username, password,host,port);
 
-        sftp.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty, String>() {
+        sftp.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty<T>, String>() {
             @Override
             public String apply(PrintProperty property) throws IOException {
                 Expect expect = property.expect;

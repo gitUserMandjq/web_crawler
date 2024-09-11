@@ -5,6 +5,7 @@ import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.expectit.Expect;
 import net.sf.expectit.ExpectBuilder;
+import org.apache.poi.ss.formula.functions.T;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -392,7 +393,11 @@ public class JSchUtil  implements SSHUtil {
         return result;
     }
     @Override
-    public String execCommandByShellExpect(MyFunction<PrintProperty, String> func)throws IOException,JSchException{
+    public <T> String execCommandByShellExpect(MyFunction<PrintProperty<T>, String> func)throws IOException,JSchException{
+        return execCommandByShellExpect(func, null);
+    }
+    @Override
+    public <T> String execCommandByShellExpect(MyFunction<PrintProperty<T>, String> func, T append)throws IOException,JSchException{
         this.connect();
         String result = "";
 
@@ -416,6 +421,7 @@ public class JSchUtil  implements SSHUtil {
         try {
             PrintProperty printProperty = new PrintProperty();
             printProperty.expect = expect;
+            printProperty.append = append;
             func.apply(printProperty);
 //            expect.expect(contains("[RETURN]"));
         }catch(Exception e){
@@ -442,7 +448,7 @@ public class JSchUtil  implements SSHUtil {
 //        JSchUtil sftp = new JSchUtil(host, username, password ,port, "127.0.0.1:7890");
         JSchUtil sftp = new JSchUtil(host, username, password ,port);
 
-        sftp.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty, String>() {
+        sftp.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty<T>, String>() {
             @Override
             public String apply(PrintProperty property) throws IOException {
                 Expect expect = property.expect;

@@ -280,9 +280,9 @@ public class EthNodeServiceImpl implements IEthNodeService {
         log.info("连接节点:{},{},{}", node.getName(), node.getIndexNum(), node.getUrl());
         SSHClientUtil clientUtil;
         if(!StringUtils.isEmpty(node.getPem())){
-            clientUtil = new SSHClientUtil(node.getAdmin(),node.getUrl(),port,node.getPem());
+            clientUtil = new SSHClientUtil(node.getAdmin(),node.getUrl(),port,node.getPem(), proxy);
         }else{
-            clientUtil = new SSHClientUtil(node.getAdmin(), node.getPassword(),node.getUrl(),port);
+            clientUtil = new SSHClientUtil(node.getAdmin(), node.getPassword(),node.getUrl(),port, proxy);
         }
         return clientUtil;
     }
@@ -691,55 +691,78 @@ public class EthNodeServiceImpl implements IEthNodeService {
         if(StringUtils.isEmpty(ethNodeDetailModel.getNodeId())){
             return;
         }
-        EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
         if(StringUtils.isEmpty(ethNodeDetailModel.getError())
                 && ethNodeDetailModel.getLastUpdateTime() != null && new Date().getTime() - ethNodeDetailModel.getLastUpdateTime().getTime() < 10*60*1000L){
             return;
         }
+        dealSSHOrder(ethNodeDetailModel, new MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String>() {
+            @Override
+            public String apply(SSHClientUtil.PrintProperty e) throws Exception {
+                Expect expect = e.expect;
+                expect.sendLine("sudo su");
+                expect.sendLine("cd /root && echo 6|./Quili.sh");
+                expect.expect(new SSHClientUtil.MatchProxy(regexp("Unclaimed balance|error getting node info")){
+
+                    @Override
+                    public void dealInput(String console) {
+                        log.info("input:【{}】",console);
+                        if(console.contains("Version")){
+                            String version = console.split("Version: ")[1].split("\n")[0];
+                            ethNodeDetailModel.setVersion(version);
+                        }
+                        if(console.contains("Unclaimed balance")){
+                            String balance = console.split("Unclaimed balance: ")[1].split(" QUIL")[0];
+                            ethNodeDetailModel.setComment(balance);
+                            ethNodeDetailModel.setLastUpdateTime(new Date());
+                            ethNodeDetailModel.setError("");
+                            System.out.println(ethNodeDetailModel.getNodeName()+":"+balance);
+                        }else if(console.contains("error getting node info")){
+                            ethNodeDetailModel.setError("error");
+                            ethNodeDetailModel.setErrorTime(new Date());
+                        }
+                    }
+                });
+                return null;
+            }
+        });
+        ethNodeDetailDao.save(ethNodeDetailModel);
+    }
+    @Override
+    public void dealSSHOrder(String nodeType, MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String> function) throws Exception {
+        dealSSHOrder(nodeType, null, function, null);
+    }
+    @Override
+    public void dealSSHOrder(String nodeType, MyFunction<EthNodeDetailModel, Boolean> filter, MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String> function, MyFunction<EthNodeDetailModel, String> callback) throws Exception {
+        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(nodeType);
+        for (EthNodeDetailModel ethNodeDetailModel : detailList) {
+            if(filter == null || filter.apply(ethNodeDetailModel)){
+                continue;
+            }
+            dealSSHOrder(ethNodeDetailModel, function);
+            if(callback != null){
+                callback.apply(ethNodeDetailModel);
+            }
+        }
+    }
+    @Override
+    public void dealSSHOrder(EthNodeDetailModel ethNodeDetailModel, MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String> function){
+        if(ethNodeDetailModel.getNodeId() == null){
+            return;
+        }
+        EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
         SSHUtil sshClientUtil;
         if(StringUtils.isEmpty(node.getPem())){
-            sshClientUtil = connectToNode(node);
+            sshClientUtil = connectToNodeSSHJ(node);
         }else{
             sshClientUtil = connectToNodeSSHJ(node);
         }
-
         try {
-            sshClientUtil.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty, String>() {
-                @Override
-                public String apply(SSHClientUtil.PrintProperty e) throws Exception {
-                    Expect expect = e.expect;
-                    expect.sendLine("sudo su");
-                    expect.sendLine("cd /root && echo 6|./Quili.sh");
-                    expect.expect(new SSHClientUtil.MatchProxy(regexp("Unclaimed balance|error getting node info")){
-
-                        @Override
-                        public void dealInput(String console) {
-                            log.info("input:【{}】",console);
-                            if(console.contains("Version")){
-                                String version = console.split("Version: ")[1].split("\n")[0];
-                                ethNodeDetailModel.setVersion(version);
-                            }
-                            if(console.contains("Unclaimed balance")){
-                                String balance = console.split("Unclaimed balance: ")[1].split(" QUIL")[0];
-                                ethNodeDetailModel.setComment(balance);
-                                ethNodeDetailModel.setLastUpdateTime(new Date());
-                                ethNodeDetailModel.setError("");
-                                System.out.println(ethNodeDetailModel.getNodeName()+":"+balance);
-                            }else if(console.contains("error getting node info")){
-                                ethNodeDetailModel.setError("error");
-                                ethNodeDetailModel.setErrorTime(new Date());
-                            }
-                        }
-                    });
-                    return null;
-                }
-            });
+            sshClientUtil.execCommandByShellExpect(function, ethNodeDetailModel);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             ethNodeDetailModel.setError(e.getMessage());
             ethNodeDetailModel.setErrorTime(new Date());
         }
-        ethNodeDetailDao.save(ethNodeDetailModel);
     }
     @Override
     public void obtainQuiliBalance(Long detailId) {
@@ -793,7 +816,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
         SSHUtil sshClientUtil = connectToNodeSSHJ(node);
 
         try {
-            sshClientUtil.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty, String>() {
+            sshClientUtil.execCommandByShellExpect(new MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String>() {
                 @Override
                 public String apply(SSHClientUtil.PrintProperty e) throws Exception {
                     Expect expect = e.expect;
@@ -814,7 +837,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
                     expect.sendLine(LinuxUtils.addCrontab("0 0 * * *", "cp -r ~/ceremonyclient/node/.config/store ~/backup/store_$(date +%Y%m%d)", "/var/log/cron.log"));
                     return null;
                 }
-            });
+            }, ethNodeDetailModel);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }

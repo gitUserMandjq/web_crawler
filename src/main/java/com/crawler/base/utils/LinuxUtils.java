@@ -12,6 +12,16 @@ public class LinuxUtils {
         String  order = "awk -v v1=\""+value+"\" 'BEGIN{FS=OFS=\"=\";addV1=1} $1==\""+paraName+"\"{addV1=0;$2=v1} {print > \""+fileName+"\"}; END{if(addV1)print \""+paraName+"=\" v1 >> \""+fileName+"\"}' "+fileName;
         return order;
     }
+    public static String replace(String fileName, String oldValue, String newValue){
+        oldValue = escape(oldValue);
+        newValue = escape(newValue);
+        String order = "sed -i \"s/"+oldValue+"/"+newValue+"/g\" "+fileName;
+        return order;
+    }
+    private static String escape(String value){
+        value = value.replaceAll("/", "\\\\/").replaceAll("&", "\\\\&");
+        return value;
+    }
     public static String bashNetScript(String url){
         String fileName = url.substring(url.lastIndexOf("/") + 1);
         String order = "wget -O "+fileName+ " " + url + " && chmod +x "+fileName+" && ./"+fileName;
@@ -43,5 +53,11 @@ public class LinuxUtils {
         String url = "https://raw.githubusercontent.com/gitUserMandjq/linuxScript/master/blockchain/monitor/quilimonitor.sh";
         String order = bashNetScript(url);
         System.out.println(order);
+        System.out.println(escape("&"));
+    }
+    public static class Screen{
+        public static String quitScreen(String screenName){
+            return "screen -S "+screenName+" -X quit";
+        }
     }
 }
