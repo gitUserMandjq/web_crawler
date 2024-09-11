@@ -51,4 +51,6 @@ public class EthNodeDetailModel {
     private Integer enabled;//是否可用
     @Column(name="diffValue")
     private BigDecimal diffValue;//当前值和上一个值差额
+    @Column(name="result")
+    private String result;
 }

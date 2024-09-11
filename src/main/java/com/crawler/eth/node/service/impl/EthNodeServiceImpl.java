@@ -712,10 +712,16 @@ public class EthNodeServiceImpl implements IEthNodeService {
                         }
                         if(console.contains("Unclaimed balance")){
                             String balance = console.split("Unclaimed balance: ")[1].split(" QUIL")[0];
-                            ethNodeDetailModel.setComment(balance);
-                            ethNodeDetailModel.setLastUpdateTime(new Date());
-                            ethNodeDetailModel.setError("");
-                            System.out.println(ethNodeDetailModel.getNodeName()+":"+balance);
+                            try {
+                                Map o = JsonUtil.string2Obj(ethNodeDetailModel.getData());
+                                o.put("balance", balance);
+                                ethNodeDetailModel.setData(JsonUtil.object2String(o));
+                                ethNodeDetailModel.setLastUpdateTime(new Date());
+                                ethNodeDetailModel.setError("");
+                                System.out.println(ethNodeDetailModel.getNodeName()+":"+balance);
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }else if(console.contains("error getting node info")){
                             ethNodeDetailModel.setError("error");
                             ethNodeDetailModel.setErrorTime(new Date());
@@ -770,15 +776,21 @@ public class EthNodeServiceImpl implements IEthNodeService {
         obtainQuiliBalance(detail);
     }
     @Override
-    public void updateQuiliBalance(String nodeName, String version, String balance) {
+    public void updateQuiliBalance(String nodeName, String version, String balance, String increment) throws IOException {
         EthNodeDetailModel detail = ethNodeDetailDao.findByNodeName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
         if(detail != null){
+            Map<String, Object> data;
+            try {
+                data = JsonUtil.string2Obj(detail.getData());
+            } catch (IOException e) {
+                data = new HashMap<>();
+                log.error(e.getMessage(), e);
+            }
             if(!StringUtils.isEmpty(balance)){
+                data.put("balance", balance);
                 detail.setVersion(version);
-                detail.setComment(balance);
                 detail.setLastUpdateTime(new Date());
                 detail.setError("");
-                ethNodeDetailDao.save(detail);
                 Date statDate = DateUtils.parseAndFormat(new Date(), "yyyy-MM-dd");
                 EthNodeDetailDailyStatModel stat = getEthNodeDetailDailyStatByStatDate(detail, statDate);
                 stat.setCurrentValue(new BigDecimal(balance));
@@ -786,8 +798,12 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 ethNodeDetailDailyStatDao.save(stat);
             }else{
                 detail.setError("Error");
-                ethNodeDetailDao.save(detail);
             }
+            if(!StringUtils.isEmpty(increment)){
+                data.put("increment", increment);
+            }
+            detail.setData(JsonUtil.object2String(data));
+            ethNodeDetailDao.save(detail);
         }
     }
     @Override

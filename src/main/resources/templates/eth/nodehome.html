@@ -94,15 +94,20 @@
                 + "<th>节点</th>"
                 + "<th>服务器</th>"
                 + "<th>余额</th>"
+                + "<th>最近一天余额增长</th>"
+                + "<th>increment</th>"
                 + "<th>最后更新时间</th>"
                 + "<th>异常</th>";
             html += "</tr>";
             for(const i in list){
                 const node = list[i];
+                const data = JSON.parse(node["data"]);
                 html += "<tr>";
                 html += "<td>"+node["nodeName"]+"</td>"
                     + "<td>"+node["serverIp"]+"</td>"
-                    + "<td>"+node["comment"]+"</td>"
+                    + "<td>"+data["balance"]+"</td>"
+                    + "<td>"+node["diffValue"]+"</td>"
+                    + "<td>"+data["increment"]+"</td>"
                     + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
                     + "<td>"+node["error"]+"</td>";
                 html += "</tr>";

@@ -243,8 +243,9 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult updateQuiliBalance(@RequestParam(required = false, value = "nodeName") String nodeName,
                                                @RequestParam(required = false, value = "version") String version,
-                                               @RequestParam(required = false, value = "balance") String balance) throws Exception {
-        ethNodeService.updateQuiliBalance(nodeName, version, balance);
+                                               @RequestParam(required = false, value = "balance") String balance,
+                                               @RequestParam(required = false, value = "increment") String increment) throws Exception {
+        ethNodeService.updateQuiliBalance(nodeName, version, balance, increment);
         return WebApiBaseResult.success();
     }
 

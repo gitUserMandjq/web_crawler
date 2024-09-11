@@ -96,7 +96,7 @@ public interface IEthNodeService {
 
     void obtainQuiliBalance(Long detailId);
 
-    void updateQuiliBalance(String nodeName, String version, String balance);
+    void updateQuiliBalance(String nodeName, String version, String balance, String increment) throws IOException;
 
     void addQuiliMonitor() throws InterruptedException;
 
