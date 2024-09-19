@@ -756,6 +756,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
             return;
         }
         EthNodeModel node = ethNodeDao.findById(ethNodeDetailModel.getNodeId()).get();
+        ethNodeDetailModel.setNode(node);
         SSHUtil sshClientUtil;
         if(StringUtils.isEmpty(node.getPem())){
             sshClientUtil = connectToNodeSSHJ(node);
@@ -786,24 +787,37 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 data = new HashMap<>();
                 log.error(e.getMessage(), e);
             }
+            Date statDate = DateUtils.parseAndFormat(new Date(), "yyyy-MM-dd");
+            EthNodeDetailDailyStatModel stat = getEthNodeDetailDailyStatByStatDate(detail, statDate);
+            boolean updateFlag = false;
             if(!StringUtils.isEmpty(balance)){
+                String lastBalance = (String) data.get("balance");
                 data.put("balance", balance);
+                data.put("lastBalance", lastBalance);
                 detail.setVersion(version);
                 detail.setLastUpdateTime(new Date());
                 detail.setError("");
-                Date statDate = DateUtils.parseAndFormat(new Date(), "yyyy-MM-dd");
-                EthNodeDetailDailyStatModel stat = getEthNodeDetailDailyStatByStatDate(detail, statDate);
                 stat.setCurrentValue(new BigDecimal(balance));
                 stat.setLastUpdateTime(new Date());
-                ethNodeDetailDailyStatDao.save(stat);
+                updateFlag = true;
             }else{
                 detail.setError("Error");
             }
             if(!StringUtils.isEmpty(increment)){
+                String lastIncrement = (String) data.get("increment");
                 data.put("increment", increment);
+                data.put("lastIncrement", lastIncrement);
+                stat.setBlockCurrentValue(new BigDecimal(increment));
+                updateFlag = true;
             }
+            Long updateTime = (Long) data.get("updateTime");
+            data.put("updateTime", new Date().getTime());
+            data.put("lastUpdateTime", updateTime);
             detail.setData(JsonUtil.object2String(data));
             ethNodeDetailDao.save(detail);
+            if(updateFlag){
+                ethNodeDetailDailyStatDao.save(stat);
+            }
         }
     }
     @Override
@@ -859,7 +873,6 @@ public class EthNodeServiceImpl implements IEthNodeService {
         }
     }
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void quiliDailyStat(Date statDate){
         List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
         for (EthNodeDetailModel ethNodeDetailModel : detailList) {
@@ -871,15 +884,29 @@ public class EthNodeServiceImpl implements IEthNodeService {
     public void quiliDailyStat(EthNodeDetailModel ethNodeDetailModel, Date statDate){
         EthNodeDetailDailyStatModel stat = getEthNodeDetailDailyStatByStatDate(ethNodeDetailModel, statDate);
         EthNodeDetailDailyStatModel lastDailyStat = ethNodeDetailDailyStatDao.findLastDailyStat(ethNodeDetailModel.getId(), statDate);
+        BigDecimal lastBlockCurrentValue;
+        BigDecimal lastCurrentValue;
         if(lastDailyStat != null){
-            stat.setLastValue(lastDailyStat.getCurrentValue());
+            lastCurrentValue = lastDailyStat.getCurrentValue();
+            lastBlockCurrentValue = lastDailyStat.getBlockCurrentValue();
+            if(stat.getCurrentValue().equals(BigDecimal.valueOf(0))){
+                stat.setCurrentValue(lastCurrentValue);
+            }
+            if(stat.getBlockCurrentValue().equals(BigDecimal.valueOf(0))){
+                stat.setBlockCurrentValue(lastBlockCurrentValue);
+            }
         }else{
-            stat.setLastValue(stat.getCurrentValue());
+            lastCurrentValue = stat.getCurrentValue();
+            lastBlockCurrentValue = stat.getBlockCurrentValue();
         }
-        stat.setDiffValue(stat.getCurrentValue().subtract(stat.getLastValue()));
+        stat.setDiffValue(stat.getCurrentValue().subtract(lastCurrentValue));
+        stat.setBlockDiffValue(stat.getBlockCurrentValue().subtract(lastBlockCurrentValue));
         ethNodeDetailDailyStatDao.save(stat);
         ethNodeDetailModel.setDiffValue(stat.getDiffValue());
+        ethNodeDetailModel.setBlockDiffValue(stat.getBlockDiffValue());
         ethNodeDetailDao.save(ethNodeDetailModel);
+        ethNodeDetailDao.updateDataMap(ethNodeDetailModel.getId(), "lastDayBalance", StringUtils.valueOf(stat.getCurrentValue()));
+        ethNodeDetailDao.updateDataMap(ethNodeDetailModel.getId(), "lastDayIncrement", StringUtils.valueOf(stat.getBlockCurrentValue()));
     }
 
     @NotNull
@@ -890,8 +917,8 @@ public class EthNodeServiceImpl implements IEthNodeService {
             stat.setNodeDetailId(ethNodeDetailModel.getId());
             stat.setNodeName(ethNodeDetailModel.getNodeName());
             stat.setNodeType(ethNodeDetailModel.getNodeType());
-            BigDecimal currentValue;
             stat.setCurrentValue(BigDecimal.valueOf(0));
+            stat.setBlockCurrentValue(BigDecimal.valueOf(0));
             stat.setStatDate(statDate);
         }
         return stat;

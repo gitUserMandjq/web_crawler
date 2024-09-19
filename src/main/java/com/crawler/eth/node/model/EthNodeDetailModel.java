@@ -23,6 +23,8 @@ public class EthNodeDetailModel {
     private String serverIp;//服务器ip
     @Column(name="nodeName")
     private String nodeName;//节点名称
+    @Column(name="showName")
+    private String showName;//显示名称
     @Column(name="nodeType")
     private String nodeType;//节点类型
     @Column(name="comment")
@@ -50,7 +52,13 @@ public class EthNodeDetailModel {
     @Column(name="enabled")
     private Integer enabled;//是否可用
     @Column(name="diffValue")
-    private BigDecimal diffValue;//当前值和上一个值差额
+    private BigDecimal diffValue = BigDecimal.valueOf(0);//当前值和上一个值差额
+    @Column(name="blockDiffValue")
+    private BigDecimal blockDiffValue = BigDecimal.valueOf(0);//区块当前值和上一个值差额
     @Column(name="result")
     private String result;
+    @Column(name="descript")
+    private String descript;
+    @Transient
+    private EthNodeModel node;
 }
