@@ -7,6 +7,7 @@ import com.crawler.base.utils.*;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthBrowserService;
+import com.crawler.eth.node.service.IEthNodeDetailTaskService;
 import com.crawler.eth.node.service.IEthNodeService;
 import com.crawler.jd.service.IJdService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,8 @@ public class EthNodeController {
     IEthNodeService ethNodeService;
     @Resource
     IEthBrowserService ethBrowserService;
+    @Resource
+    IEthNodeDetailTaskService ethNodeDetailTaskService;
     @GetMapping("/index")
     public String index(){
         return "eth/nodehome"; //当浏览器输入/index时，会返回 /static/home.html的页面
@@ -63,8 +66,10 @@ public class EthNodeController {
      */
     @RequestMapping("/getNodeDetailList")
     @ResponseBody
-    public WebApiBaseResult getNodeDetailList(HttpSession httpSession, HttpServletRequest request, @RequestParam(value="nodeType") String nodeType) throws Exception {
-        List<EthNodeDetailModel> ethNodeModels = ethNodeService.listNodeDetailByNodeType(nodeType);
+    public WebApiBaseResult getNodeDetailList(HttpSession httpSession, HttpServletRequest request
+            , @RequestParam(value="nodeType") String nodeType
+            , @RequestParam(value="enabled", defaultValue = "1") Integer enabled) throws Exception {
+        List<EthNodeDetailModel> ethNodeModels = ethNodeService.listNodeDetailByNodeType(nodeType, enabled);
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
@@ -90,7 +95,7 @@ public class EthNodeController {
     @RequestMapping("/getionetNodeList")
     @ResponseBody
     public WebApiBaseResult getionetNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
-        List<EthNodeDetailModel> ethNodeModels = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_IONET);
+        List<EthNodeDetailModel> ethNodeModels = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_IONET, 1);
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
@@ -158,7 +163,7 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult dealIonetNodeList(HttpSession httpSession, HttpServletRequest request) throws Exception {
 //        ethBrowserService.ionetRefreshToken(1L);
-        List<EthNodeDetailModel> list = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_IONET);
+        List<EthNodeDetailModel> list = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_IONET, 1);
         for(EthNodeDetailModel node:list){
             ethBrowserService.getionetDeviceStatus(node);
 //            if(!"up".equals(node.getState())){
@@ -246,6 +251,26 @@ public class EthNodeController {
                                                @RequestParam(required = false, value = "balance") String balance,
                                                @RequestParam(required = false, value = "increment") String increment) throws Exception {
         ethNodeService.updateQuiliBalance(nodeName, version, balance, increment);
+        return WebApiBaseResult.success();
+    }
+    @RequestMapping("/addBackupTask")
+    @ResponseBody
+    public WebApiBaseResult addBackupTask(@RequestParam(required = false, value = "nodeName") String nodeName) throws Exception {
+        EthNodeDetailModel detail = ethNodeService.getNodeDetailByName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
+        ethNodeDetailTaskService.addBackupTask(detail, false);
+        return WebApiBaseResult.success();
+    }
+    @RequestMapping("/isBackup")
+    @ResponseBody
+    public WebApiBaseResult isBackup(@RequestParam(required = false, value = "nodeName") String nodeName) throws Exception {
+        EthNodeDetailModel detail = ethNodeService.getNodeDetailByName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
+        return WebApiBaseResult.success(ethNodeDetailTaskService.isBackup(detail));
+    }
+    @RequestMapping("/finishBackup")
+    @ResponseBody
+    public WebApiBaseResult finishBackup(@RequestParam(required = false, value = "nodeName") String nodeName) throws Exception {
+        EthNodeDetailModel detail = ethNodeService.getNodeDetailByName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
+        ethNodeDetailTaskService.finishBackup(detail);
         return WebApiBaseResult.success();
     }
 

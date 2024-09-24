@@ -27,6 +27,8 @@ public interface IEthNodeService {
 
     List<EthNodeDetailModel> listNodeDetailByNodeType(String nodeType);
 
+    List<EthNodeDetailModel> listNodeDetailByNodeType(String nodeType, Integer enabled);
+
     /**
      * 登陆shardeum
      * @param client
@@ -95,6 +97,8 @@ public interface IEthNodeService {
     void dealSSHOrder(EthNodeDetailModel ethNodeDetailModel, MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String> function);
 
     void obtainQuiliBalance(Long detailId);
+
+    EthNodeDetailModel getNodeDetailByName(String nodeType, String nodeName);
 
     void updateQuiliBalance(String nodeName, String version, String balance, String increment) throws IOException;
 

@@ -62,6 +62,16 @@ public class EthNodeServiceImpl implements IEthNodeService {
         return nodeList;
     }
     /**
+     * 获得节点信息
+     * @param nodeType
+     * @return
+     */
+    @Override
+    public List<EthNodeDetailModel> listNodeDetailByNodeType(String nodeType, Integer enabled) {
+        List<EthNodeDetailModel> nodeList = ethNodeDetailDao.findByNodeTypeAndEnabled(nodeType, enabled);
+        return nodeList;
+    }
+    /**
      * 登陆shardeum
      * @param client
      * @param node
@@ -777,6 +787,10 @@ public class EthNodeServiceImpl implements IEthNodeService {
         obtainQuiliBalance(detail);
     }
     @Override
+    public EthNodeDetailModel getNodeDetailByName(String nodeType, String nodeName){
+        return ethNodeDetailDao.findByNodeName(nodeType, nodeName);
+    }
+    @Override
     public void updateQuiliBalance(String nodeName, String version, String balance, String increment) throws IOException {
         EthNodeDetailModel detail = ethNodeDetailDao.findByNodeName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
         if(detail != null){
@@ -801,7 +815,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 stat.setLastUpdateTime(new Date());
                 updateFlag = true;
             }else{
-                detail.setError("Error");
+                detail.setError("未读到balance");
             }
             if(!StringUtils.isEmpty(increment)){
                 String lastIncrement = (String) data.get("increment");

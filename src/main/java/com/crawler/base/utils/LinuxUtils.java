@@ -8,6 +8,13 @@ public class LinuxUtils {
         order += "  && source /etc/profile";
         return order;
     }
+    public static String setBashVars(String paraName, String value){
+        // /etc/profile在cron定时器中生效
+        // /root/.bashrc在ssh时生效
+        String  order = setVars("/root/.bashrc", "export " + paraName, value);
+        order += "  && source /root/.bashrc";
+        return order;
+    }
     public static String setVars(String fileName, String paraName, String value){
         String  order = "awk -v v1=\""+value+"\" 'BEGIN{FS=OFS=\"=\";addV1=1} $1==\""+paraName+"\"{addV1=0;$2=v1} {print > \""+fileName+"\"}; END{if(addV1)print \""+paraName+"=\" v1 >> \""+fileName+"\"}' "+fileName;
         return order;

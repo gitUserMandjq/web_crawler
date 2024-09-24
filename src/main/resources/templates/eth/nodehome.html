@@ -23,6 +23,10 @@
         .hidden{
             display: none;
         }
+        .figure {
+            max-width: 100px;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
@@ -32,8 +36,15 @@
         <button id="ionet_button">ionet</button>
         <button id="avail_button">avail</button>
 <!--        状态：<span id="status"></span>-->
-        <div id="quili_nodeStatus" class="nodeStatus">
+        <div id="quili_node">
+            <span>上线钱包</span>
+            <div id="quili_nodeStatus" class="nodeStatus">
 
+            </div>
+            <span>未上线钱包</span>
+            <div id="quili_node_wallet" class="nodeStatus">
+
+            </div>
         </div>
         <div id="ionet_nodeStatus" class="nodeStatus hidden">
 
@@ -69,7 +80,7 @@
     }
     $("#quili_button").click(function(){
         $(".nodeStatus").addClass("hidden");
-        $("#quili_nodeStatus").removeClass("hidden");
+        $("#quili_node").removeClass("hidden");
     })
     $("#ionet_button").click(function(){
         $(".nodeStatus").addClass("hidden");
@@ -91,30 +102,75 @@
         $.getAjax(url, formData, function(result){
             const list = result.data;
             let html = "<table class='commonTable'><tr>"
+                + "<th>序号</th>"
                 + "<th>节点</th>"
+                + "<th>Quili名称</th>"
                 + "<th>服务器</th>"
-                + "<th>余额</th>"
-                + "<th>最近一天余额增长</th>"
-                + "<th>increment</th>"
+                + "<th class='figure'>余额</th>"
+                + "<th class='figure'>最近一次余额增长</th>"
+                + "<th class='figure'>当天余额增长</th>"
+                + "<th class='figure'>最近一天余额增长</th>"
+                + "<th class='figure'>increment</th>"
+                + "<th class='figure'>最近一次increment增长</th>"
+                + "<th class='figure'>当天increment增长</th>"
+                + "<th class='figure'>最近一天increment增长</th>"
                 + "<th>最后更新时间</th>"
-                + "<th>异常</th>";
+                + "<th>异常</th>"
+                + "<th>备注</th>";
             html += "</tr>";
+            let num = 1;
             for(const i in list){
                 const node = list[i];
                 const data = JSON.parse(node["data"]);
                 html += "<tr>";
-                html += "<td>"+node["nodeName"]+"</td>"
+                html += "<td>"+(num++)+"</td>"
+                    + "<td>"+(node["showName"]?node["showName"]:node["nodeName"])+"</td>"
+                    + "<td>"+node["nodeName"]+"</td>"
                     + "<td>"+node["serverIp"]+"</td>"
-                    + "<td>"+data["balance"]+"</td>"
-                    + "<td>"+node["diffValue"]+"</td>"
-                    + "<td>"+data["increment"]+"</td>"
+                    + "<td class='figure'>"+parseFloat(data["balance"]).toFixed(4)+"</td>"
+                    + "<td class='figure'>"+((data["balance"]-data['lastBalance']) * 1000 * 60 * 60/(data["updateTime"] - data["lastUpdateTime"])).toFixed(4)+"/小时</td>"
+                    + "<td class='figure'>"+(data["balance"] - (data["lastDayBalance"]?data["lastDayBalance"]:0)).toFixed(4)+"</td>"
+                    + "<td class='figure'>"+node["diffValue"].toFixed(4)+"</td>"
+                    + "<td class='figure'>"+data["increment"]+"</td>"
+                    + "<td class='figure'>"+((data["increment"]-data['lastIncrement']) * 1000 * 60 * 60/(data["updateTime"] - data["lastUpdateTime"])).toFixed(1)+"/小时</td>"
+                    + "<td class='figure'>"+(data["increment"] - (data["lastDayIncrement"]?data["lastDayIncrement"]:0))+"</td>"
+                    + "<td class='figure'>"+node["blockDiffValue"]+"</td>"
                     + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
-                    + "<td>"+node["error"]+"</td>";
+                    + "<td>"+node["error"]+"</td>"
+                    + "<td>"+node["descript"]+"</td>";
                 html += "</tr>";
             }
             html += "</table>";
             $("#quili_nodeStatus").html(html);
             setTimeout(function(){getQuiliList()}, 120000);
+        })
+        $.getAjax(url + "&enabled=0", formData, function(result){
+            const list = result.data;
+            let html = "<table class='commonTable'><tr>"
+                + "<th>序号</th>"
+                + "<th>Quili名称</th>"
+                + "<th class='figure'>余额</th>"
+                + "<th class='figure'>increment</th>"
+                + "<th>最后更新时间</th>"
+                + "<th>异常</th>"
+                + "<th>备注</th>";
+            html += "</tr>";
+            let num = 1;
+            for(const i in list){
+                const node = list[i];
+                const data = JSON.parse(node["data"]);
+                html += "<tr>";
+                html += "<td>"+(num++)+"</td>"
+                    + "<td>"+node["nodeName"]+"</td>"
+                    + "<td class='figure'>"+parseFloat(data["balance"]).toFixed(4)+"</td>"
+                    + "<td class='figure'>"+data["increment"]+"</td>"
+                    + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
+                    + "<td>"+node["error"]+"</td>"
+                    + "<td>"+node["descript"]+"</td>";
+                html += "</tr>";
+            }
+            html += "</table>";
+            $("#quili_node_wallet").html(html);
         })
     }
     function getionetNodeList(){
