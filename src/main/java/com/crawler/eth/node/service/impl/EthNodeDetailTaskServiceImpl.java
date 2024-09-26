@@ -72,7 +72,8 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
                         return false;
                     }
                 }
-                if(size > nodeBackup.getProcessNum()){
+                //控制同时备份的数量
+                if(size >= nodeBackup.getProcessNum()){
                     return false;
                 }
             }
