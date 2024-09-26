@@ -116,7 +116,8 @@
                 + "<th class='figure'>最近一天increment增长</th>"
                 + "<th>最后更新时间</th>"
                 + "<th>异常</th>"
-                + "<th>备注</th>";
+                + "<th>备注</th>"
+                + "<th>备份</th>";
             html += "</tr>";
             let num = 1;
             for(const i in list){
@@ -137,7 +138,8 @@
                     + "<td class='figure'>"+node["blockDiffValue"]+"</td>"
                     + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
                     + "<td>"+node["error"]+"</td>"
-                    + "<td>"+node["descript"]+"</td>";
+                    + "<td>"+node["descript"]+"</td>"
+                    + "<td><span id='taskState-"+node["nodeName"]+"'>"+node["taskState"]+"</span><button onclick=\"backup('"+node["nodeName"]+"')\">备份</button></td>";
                 html += "</tr>";
             }
             html += "</table>";
@@ -171,6 +173,17 @@
             }
             html += "</table>";
             $("#quili_node_wallet").html(html);
+        })
+    }
+    function backup(nodeName){
+        const url = "/web_crawler/eth/node/addBackupTask"
+        const formData = {"nodeName":nodeName};
+        $.post(url, formData, function(result){
+            if(result.statusCode != '200'){
+                layer.msg(result.errorMessage);
+            }else{
+                $("#taskState-"+nodeName).text("准备备份");
+            }
         })
     }
     function getionetNodeList(){

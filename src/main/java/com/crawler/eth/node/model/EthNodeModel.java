@@ -65,4 +65,5 @@ public class EthNodeModel {
     public static final String NODETYPE_DEPIN = "depin";
     public static final String NODETYPE_QUILIBRIUM = "Quilibrium";
     public static final String NODETYPE_MONITOR = "monitor";//监听服务器
+    public static final String NODETYPE_BACKUP = "backup";//备份服务器
 }

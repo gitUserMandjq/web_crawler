@@ -1,7 +1,9 @@
 package com.crawler.eth.node.service.impl;
 
+import com.crawler.eth.node.dao.EthNodeBackupDao;
 import com.crawler.eth.node.dao.EthNodeDetailTaskDao;
 import com.crawler.eth.node.enums.NodeTaskType;
+import com.crawler.eth.node.model.EthNodeBackupModel;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeDetailTaskModel;
 import com.crawler.eth.node.service.IEthNodeDetailTaskService;
@@ -35,6 +37,7 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
             lastestDetailTask.setNodeDetailId(detail.getId());
             lastestDetailTask.setNodeName(detail.getNodeName());
             lastestDetailTask.setNodeType(detail.getNodeType());
+            lastestDetailTask.setTaskType(EthNodeDetailTaskModel.TASK_BACKUP);
         }
         lastestDetailTask.setCreateTime(new Date());
         lastestDetailTask.setState(NodeTaskType.BackupEnum.PREPARE.getCode());
@@ -43,27 +46,33 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
         ethNodeService.update(detail);
     }
     @Override
-    public boolean isBackup(EthNodeDetailModel detail){
+    public boolean isBackup(EthNodeDetailModel detail, EthNodeBackupModel nodeBackup){
         if(detail == null){
             return false;
         }
         List<EthNodeDetailTaskModel> list = listProgressTask(EthNodeDetailTaskModel.TASK_BACKUP);
         if(!list.isEmpty()){
+            int size = 0;
             //备份任务比较占用流量，如果有多个任务，那么只进行第一个任务
-            EthNodeDetailTaskModel task = list.get(0);
-            if(task.getNodeDetailId().equals(detail.getId())){
-                if(NodeTaskType.BackupEnum.PREPARE.getCode().equals(task.getState())){
-                    //开始备份
-                    startBackup(task);
-                    detail.setTaskState("开始备份");
-                    ethNodeService.update(detail);
-                    return true;
-                }else if(NodeTaskType.BackupEnum.START.getCode().equals(task.getState())
-                    && (new Date().getTime() - task.getStartTime().getTime() >= 1000 * 60 * 10)){
-                    errorBackup(task, "备份超时");
-                    detail.setTaskState("备份超时");
-                    ethNodeService.update(detail);
-                    //备份开始10分钟后还没成功
+            for (EthNodeDetailTaskModel task : list) {
+                size++;
+                if(task.getNodeDetailId().equals(detail.getId())){
+                    if(NodeTaskType.BackupEnum.PREPARE.getCode().equals(task.getState())){
+                        //开始备份
+                        startBackup(task);
+                        detail.setTaskState("开始备份");
+                        ethNodeService.update(detail);
+                        return true;
+                    }else if(NodeTaskType.BackupEnum.START.getCode().equals(task.getState())
+                            && (new Date().getTime() - task.getStartTime().getTime() >= 1000 * 60 * 10)){
+                        errorBackup(task, "备份超时");
+                        detail.setTaskState("备份超时");
+                        ethNodeService.update(detail);
+                        //备份开始10分钟后还没成功
+                        return false;
+                    }
+                }
+                if(size > nodeBackup.getProcessNum()){
                     return false;
                 }
             }

@@ -4,6 +4,7 @@ import com.crawler.base.common.model.MyFunction;
 import com.crawler.base.utils.JSchUtil;
 import com.crawler.base.utils.SSHClientUtil;
 import com.crawler.base.utils.SSHUtil;
+import com.crawler.eth.node.model.EthNodeBackupModel;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.jcraft.jsch.JSchException;
@@ -111,4 +112,6 @@ public interface IEthNodeService {
 
     @Transactional(rollbackFor = Exception.class)
     void quiliDailyStat(EthNodeDetailModel ethNodeDetailModel, Date statDate);
+
+    EthNodeBackupModel getEthNodeBackup();
 }

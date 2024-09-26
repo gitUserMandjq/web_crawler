@@ -4,6 +4,7 @@ import com.crawler.account.model.CrawlerClientInfo;
 import com.crawler.account.pool.CrawlerClientPool;
 import com.crawler.base.common.model.WebApiBaseResult;
 import com.crawler.base.utils.*;
+import com.crawler.eth.node.model.EthNodeBackupModel;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthBrowserService;
@@ -24,10 +25,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Controller
 @RequestMapping(value = "/eth/node")
@@ -263,8 +261,19 @@ public class EthNodeController {
     @RequestMapping("/isBackup")
     @ResponseBody
     public WebApiBaseResult isBackup(@RequestParam(required = false, value = "nodeName") String nodeName) throws Exception {
+        EthNodeBackupModel nodeBackup = ethNodeService.getEthNodeBackup();
         EthNodeDetailModel detail = ethNodeService.getNodeDetailByName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
-        return WebApiBaseResult.success(ethNodeDetailTaskService.isBackup(detail));
+        boolean isBackup = ethNodeDetailTaskService.isBackup(detail, nodeBackup);
+        Map<String, Object> map = new HashMap<>();
+        map.put("isBackup", isBackup);
+        if(isBackup){
+            map.put("user", nodeBackup.getAdmin());
+            map.put("password", nodeBackup.getPassword());
+            map.put("ip", nodeBackup.getIp());
+            map.put("filePath", nodeBackup.getFilePath());
+            map.put("port", nodeBackup.getPort());
+        }
+        return WebApiBaseResult.success(map);
     }
     @RequestMapping("/finishBackup")
     @ResponseBody

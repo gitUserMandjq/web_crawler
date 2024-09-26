@@ -2,9 +2,11 @@ package com.crawler.eth.node.service.impl;
 
 import com.crawler.base.common.model.MyFunction;
 import com.crawler.base.utils.*;
+import com.crawler.eth.node.dao.EthNodeBackupDao;
 import com.crawler.eth.node.dao.EthNodeDao;
 import com.crawler.eth.node.dao.EthNodeDetailDailyStatDao;
 import com.crawler.eth.node.dao.EthNodeDetailDao;
+import com.crawler.eth.node.model.EthNodeBackupModel;
 import com.crawler.eth.node.model.EthNodeDetailDailyStatModel;
 import com.crawler.eth.node.model.EthNodeDetailModel;
 import com.crawler.eth.node.model.EthNodeModel;
@@ -39,6 +41,8 @@ public class EthNodeServiceImpl implements IEthNodeService {
     EthNodeDetailDao ethNodeDetailDao;
     @Resource
     EthNodeDetailDailyStatDao ethNodeDetailDailyStatDao;
+    @Resource
+    EthNodeBackupDao ethNodeBackupDao;
     @Value("${common.proxy:}")
     String proxy;
     /**
@@ -680,7 +684,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
     }
     @Override
     public void obtainQuiliBalance() throws InterruptedException {
-        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
+        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeTypeAndEnabled(EthNodeModel.NODETYPE_QUILIBRIUM, 1);
         ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(detailList.size(), 5);
         for (EthNodeDetailModel ethNodeDetailModel : detailList) {
             chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
@@ -749,7 +753,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
     }
     @Override
     public void dealSSHOrder(String nodeType, MyFunction<EthNodeDetailModel, Boolean> filter, MyFunction<SSHClientUtil.PrintProperty<EthNodeDetailModel>, String> function, MyFunction<EthNodeDetailModel, String> callback) throws Exception {
-        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(nodeType);
+        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeTypeAndEnabled(nodeType, 1);
         for (EthNodeDetailModel ethNodeDetailModel : detailList) {
             if(filter == null || filter.apply(ethNodeDetailModel)){
                 continue;
@@ -836,7 +840,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
     }
     @Override
     public void addQuiliMonitor() throws InterruptedException {
-        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
+        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeTypeAndEnabled(EthNodeModel.NODETYPE_QUILIBRIUM, 1);
         ThreadUtils.ChokeLimitThreadPool chokeLimitThreadPool = ThreadUtils.getInstance().chokeLimitThreadPool(detailList.size(), 5);
         for (EthNodeDetailModel ethNodeDetailModel : detailList) {
             chokeLimitThreadPool.run(new ThreadUtils.ChokeLimitThreadPool.RunThread() {
@@ -888,7 +892,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
     }
     @Override
     public void quiliDailyStat(Date statDate){
-        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM);
+        List<EthNodeDetailModel> detailList = ethNodeDetailDao.findByNodeTypeAndEnabled(EthNodeModel.NODETYPE_QUILIBRIUM, 1);
         for (EthNodeDetailModel ethNodeDetailModel : detailList) {
             quiliDailyStat(ethNodeDetailModel, statDate);
         }
@@ -936,5 +940,10 @@ public class EthNodeServiceImpl implements IEthNodeService {
             stat.setStatDate(statDate);
         }
         return stat;
+    }
+    @Override
+    public EthNodeBackupModel getEthNodeBackup(){
+        List<EthNodeBackupModel> all = ethNodeBackupDao.findAll();
+        return all.get(0);
     }
 }
