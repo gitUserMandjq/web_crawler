@@ -254,8 +254,15 @@ public class EthNodeController {
     @RequestMapping("/addBackupTask")
     @ResponseBody
     public WebApiBaseResult addBackupTask(@RequestParam(required = false, value = "nodeName") String nodeName) throws Exception {
-        EthNodeDetailModel detail = ethNodeService.getNodeDetailByName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
-        ethNodeDetailTaskService.addBackupTask(detail, false);
+        if("all".equals(nodeName)){
+            List<EthNodeDetailModel> detailList = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM, 1);
+            for (EthNodeDetailModel detail : detailList) {
+                ethNodeDetailTaskService.addBackupTask(detail, false);
+            }
+        }else{
+            EthNodeDetailModel detail = ethNodeService.getNodeDetailByName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
+            ethNodeDetailTaskService.addBackupTask(detail, false);
+        }
         return WebApiBaseResult.success();
     }
     @RequestMapping("/isBackup")
