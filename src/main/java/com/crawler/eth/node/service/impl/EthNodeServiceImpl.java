@@ -795,7 +795,7 @@ public class EthNodeServiceImpl implements IEthNodeService {
         return ethNodeDetailDao.findByNodeName(nodeType, nodeName);
     }
     @Override
-    public void updateQuiliBalance(String nodeName, String version, String balance, String increment) throws IOException {
+    public void updateQuiliBalance(String nodeName, String version, String balance, String increment, String time_taken, String processNum, String nproc) throws IOException {
         EthNodeDetailModel detail = ethNodeDetailDao.findByNodeName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
         if(detail != null){
             Map<String, Object> data;
@@ -826,6 +826,18 @@ public class EthNodeServiceImpl implements IEthNodeService {
                 data.put("increment", increment);
                 data.put("lastIncrement", lastIncrement);
                 stat.setBlockCurrentValue(new BigDecimal(increment));
+                updateFlag = true;
+            }
+            if(!StringUtils.isEmpty(time_taken)){
+                data.put("time_taken", time_taken);
+                updateFlag = true;
+            }
+            if(!StringUtils.isEmpty(processNum)){
+                data.put("processNum", processNum);
+                updateFlag = true;
+            }
+            if(!StringUtils.isEmpty(nproc)){
+                data.put("nproc", nproc);
                 updateFlag = true;
             }
             Long updateTime = (Long) data.get("updateTime");

@@ -1,6 +1,7 @@
 package com.crawler.eth.node.service.impl;
 
 import com.crawler.eth.node.dao.EthNodeBackupDao;
+import com.crawler.eth.node.dao.EthNodeDetailDao;
 import com.crawler.eth.node.dao.EthNodeDetailTaskDao;
 import com.crawler.eth.node.enums.NodeTaskType;
 import com.crawler.eth.node.model.EthNodeBackupModel;
@@ -20,6 +21,8 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
     EthNodeDetailTaskDao ethNodeDetailTaskDao;
     @Resource
     IEthNodeService ethNodeService;
+    @Resource
+    EthNodeDetailDao ethNodeDetailDao;
     public List<EthNodeDetailTaskModel> listProgressTask(String taskType){
         List<EthNodeDetailTaskModel> taskList = ethNodeDetailTaskDao.listProgressTask(taskType);
         return taskList;
@@ -43,7 +46,7 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
         lastestDetailTask.setState(NodeTaskType.BackupEnum.PREPARE.getCode());
         ethNodeDetailTaskDao.save(lastestDetailTask);
         detail.setTaskState("准备备份");
-        ethNodeService.update(detail);
+        ethNodeDetailDao.save(detail);
     }
     @Override
     public boolean isBackup(EthNodeDetailModel detail, EthNodeBackupModel nodeBackup){
@@ -61,16 +64,19 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
                         //开始备份
                         startBackup(task);
                         detail.setTaskState("开始备份");
-                        ethNodeService.update(detail);
+                        ethNodeDetailDao.save(detail);
                         return true;
                     }else if(NodeTaskType.BackupEnum.START.getCode().equals(task.getState())
                             && (new Date().getTime() - task.getStartTime().getTime() >= 1000 * 60 * 10)){
                         errorBackup(task, "备份超时");
                         detail.setTaskState("备份超时");
-                        ethNodeService.update(detail);
+                        ethNodeDetailDao.save(detail);
                         //备份开始10分钟后还没成功
                         return false;
                     }
+                }else if(NodeTaskType.BackupEnum.PREPARE.getCode().equals(task.getState())
+                        && (new Date().getTime() - task.getCreateTime().getTime() >= 1000 * 60 * 20)){//30分钟内没有开始备份视为超时
+                    errorBackup(task, "备份超时");
                 }
                 //控制同时备份的数量
                 if(size >= nodeBackup.getProcessNum()){
@@ -86,7 +92,7 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
         if(lastestDetailTask != null){
             finishBackup(lastestDetailTask);
             detail.setTaskState("完成备份");
-            ethNodeService.update(detail);
+            ethNodeDetailDao.save(detail);
         }
     }
     public void startBackup(EthNodeDetailTaskModel task){

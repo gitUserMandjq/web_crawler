@@ -247,8 +247,11 @@ public class EthNodeController {
     public WebApiBaseResult updateQuiliBalance(@RequestParam(required = false, value = "nodeName") String nodeName,
                                                @RequestParam(required = false, value = "version") String version,
                                                @RequestParam(required = false, value = "balance") String balance,
-                                               @RequestParam(required = false, value = "increment") String increment) throws Exception {
-        ethNodeService.updateQuiliBalance(nodeName, version, balance, increment);
+                                               @RequestParam(required = false, value = "increment") String increment,
+                                               @RequestParam(required = false, value = "time_taken") String time_taken,
+                                               @RequestParam(required = false, value = "processNum") String processNum,
+                                               @RequestParam(required = false, value = "nproc") String nproc) throws Exception {
+        ethNodeService.updateQuiliBalance(nodeName, version, balance, increment, time_taken, processNum, nproc);
         return WebApiBaseResult.success();
     }
     @RequestMapping("/addBackupTask")
@@ -257,7 +260,7 @@ public class EthNodeController {
         if("all".equals(nodeName)){
             List<EthNodeDetailModel> detailList = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM, 1);
             for (EthNodeDetailModel detail : detailList) {
-                ethNodeDetailTaskService.addBackupTask(detail, false);
+                ethNodeDetailTaskService.addBackupTask(detail, true);
             }
         }else{
             EthNodeDetailModel detail = ethNodeService.getNodeDetailByName(EthNodeModel.NODETYPE_QUILIBRIUM, nodeName);
