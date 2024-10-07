@@ -129,6 +129,7 @@
             list = list.sort((a,b)=>{
                 return b["data"]["increment"] - a["data"]["increment"];
             });
+            let totalBalance = 0;
             let totalTodayBalance = 0;
             let totalYesterdayBalance = 0;
             let totalTodayIncrement = 0;
@@ -136,6 +137,8 @@
             for(const i in list){
                 const node = list[i];
                 const data = node["data"];
+                const balance = parseFloat(data["balance"]);
+                totalBalance += balance;
                 const todayBalance = (data["balance"] - (data["lastDayBalance"]?data["lastDayBalance"]:0));
                 totalTodayBalance += todayBalance;
                 const yesterdayBalance = node["diffValue"];
@@ -150,7 +153,7 @@
                     + "<td>"+node["nodeName"]+"</td>"
                     + "<td>"+node["serverIp"]+"</td>"
                     + "<td>"+data["nproc"]+"/"+data["processNum"]+"/"+data["time_taken"]+"</td>"
-                    + "<td class='figure'>"+parseFloat(data["balance"]).toFixed(4)+"</td>"
+                    + "<td class='figure'>"+balance.toFixed(4)+"</td>"
                     + "<td class='figure'>"+((data["balance"]-data['lastBalance']) * 1000 * 60 * 60/(data["updateTime"] - data["lastUpdateTime"])).toFixed(4)+"/小时</td>"
                     + "<td class='figure'>"+todayBalance.toFixed(4)+"</td>"
                     + "<td class='figure'>"+yesterdayBalance.toFixed(4)+"</td>"
@@ -170,12 +173,12 @@
                 + "<td></td>"
                 + "<td></td>"
                 + "<td></td>"
-                + "<td></td>"
-                + "<td></td>"
+                + "<td class='figure'>"+totalBalance+"</td>"
+                + "<td class='figure'></td>"
                 + "<td class='figure'>"+totalTodayBalance.toFixed(4)+"</td>"
                 + "<td class='figure'>"+totalYesterdayBalance.toFixed(4)+"</td>"
-                + "<td></td>"
-                + "<td></td>"
+                + "<td class='figure'></td>"
+                + "<td class='figure'></td>"
                 + "<td class='figure'>"+totalTodayIncrement+"</td>"
                 + "<td class='figure'>"+totalYesterdayIncrement+"</td>"
                 + "<td></td>"
