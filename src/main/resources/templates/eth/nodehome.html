@@ -129,9 +129,21 @@
             list = list.sort((a,b)=>{
                 return b["data"]["increment"] - a["data"]["increment"];
             });
+            let totalTodayBalance = 0;
+            let totalYesterdayBalance = 0;
+            let totalTodayIncrement = 0;
+            let totalYesterdayIncrement = 0;
             for(const i in list){
                 const node = list[i];
                 const data = node["data"];
+                const todayBalance = (data["balance"] - (data["lastDayBalance"]?data["lastDayBalance"]:0));
+                totalTodayBalance += todayBalance;
+                const yesterdayBalance = node["diffValue"];
+                totalYesterdayBalance += yesterdayBalance;
+                const todayIncrement = (data["increment"] - (data["lastDayIncrement"]?data["lastDayIncrement"]:0));
+                totalTodayIncrement += todayIncrement;
+                const yesterdayIncrement = node["blockDiffValue"];
+                totalYesterdayIncrement += yesterdayIncrement;
                 html += "<tr>";
                 html += "<td>"+(num++)+"</td>"
                     + "<td>"+(node["showName"]?node["showName"]:node["nodeName"])+"</td>"
@@ -140,18 +152,37 @@
                     + "<td>"+data["nproc"]+"/"+data["processNum"]+"/"+data["time_taken"]+"</td>"
                     + "<td class='figure'>"+parseFloat(data["balance"]).toFixed(4)+"</td>"
                     + "<td class='figure'>"+((data["balance"]-data['lastBalance']) * 1000 * 60 * 60/(data["updateTime"] - data["lastUpdateTime"])).toFixed(4)+"/小时</td>"
-                    + "<td class='figure'>"+(data["balance"] - (data["lastDayBalance"]?data["lastDayBalance"]:0)).toFixed(4)+"</td>"
-                    + "<td class='figure'>"+node["diffValue"].toFixed(4)+"</td>"
+                    + "<td class='figure'>"+todayBalance.toFixed(4)+"</td>"
+                    + "<td class='figure'>"+yesterdayBalance.toFixed(4)+"</td>"
                     + "<td class='figure'>"+data["increment"]+"</td>"
                     + "<td class='figure'>"+((data["increment"]-data['lastIncrement']) * 1000 * 60 * 60/(data["updateTime"] - data["lastUpdateTime"])).toFixed(1)+"/小时</td>"
-                    + "<td class='figure'>"+(data["increment"] - (data["lastDayIncrement"]?data["lastDayIncrement"]:0))+"</td>"
-                    + "<td class='figure'>"+node["blockDiffValue"]+"</td>"
+                    + "<td class='figure'>"+todayIncrement+"</td>"
+                    + "<td class='figure'>"+yesterdayIncrement+"</td>"
                     + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
                     + "<td>"+node["error"]+"</td>"
                     + "<td>"+node["descript"]+"</td>"
                     + "<td><span id='taskState-"+node["nodeName"]+"'>"+node["taskState"]+"</span><button onclick=\"backup('"+node["nodeName"]+"')\">备份</button></td>";
                 html += "</tr>";
             }
+            html += "<tr>";
+            html += "<td></td>"
+                + "<td>总和</td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td class='figure'>"+totalTodayBalance.toFixed(4)+"</td>"
+                + "<td class='figure'>"+totalYesterdayBalance.toFixed(4)+"</td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td class='figure'>"+totalTodayIncrement+"</td>"
+                + "<td class='figure'>"+totalYesterdayIncrement+"</td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td></td>";
+            html += "</tr>";
             html += "</table>";
             $("#quili_nodeStatus").html(html);
             setTimeout(function(){getQuiliList()}, 120000);
