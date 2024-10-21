@@ -55,6 +55,13 @@ public class EthNodeServiceImpl implements IEthNodeService {
         List<EthNodeModel> nodeList = ethNodeDao.findByNodeType(nodeType);
         return nodeList;
     }
+    @Override
+    public List<EthNodeModel> listNodeById(Iterable<Long> ids) {
+        if(ids == null || !ids.iterator().hasNext()){
+            return new ArrayList<>();
+        }
+        return ethNodeDao.findAllById(ids);
+    }
     /**
      * 获得节点信息
      * @param nodeType
@@ -957,5 +964,35 @@ public class EthNodeServiceImpl implements IEthNodeService {
     public EthNodeBackupModel getEthNodeBackup(){
         List<EthNodeBackupModel> all = ethNodeBackupDao.findAll();
         return all.get(0);
+    }
+
+    /**
+     * 修改节点名称
+     * @param id
+     * @param showName
+     * @return
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public EthNodeDetailModel updateShowName(Long id, String showName){
+        EthNodeDetailModel detail = ethNodeDetailDao.getById(id);
+        detail.setShowName(showName);
+        ethNodeDetailDao.save(detail);
+        return detail;
+    }
+    /**
+     * 修改节点日期
+     * @param id
+     * @param expireDate
+     * @return
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public EthNodeModel updateExpireDate(Long id, Date expireDate){
+        EthNodeDetailModel detail = ethNodeDetailDao.getById(id);
+        EthNodeModel node = ethNodeDao.getById(detail.getNodeId());
+        node.setExpireDate(expireDate);
+        ethNodeDao.save(node);
+        return node;
     }
 }

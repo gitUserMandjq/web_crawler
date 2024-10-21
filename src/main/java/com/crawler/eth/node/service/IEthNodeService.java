@@ -26,6 +26,8 @@ public interface IEthNodeService {
      */
     List<EthNodeModel> listNodeByNodeType(String nodeType);
 
+    List<EthNodeModel> listNodeById(Iterable<Long> ids);
+
     List<EthNodeDetailModel> listNodeDetailByNodeType(String nodeType);
 
     List<EthNodeDetailModel> listNodeDetailByNodeType(String nodeType, Integer enabled);
@@ -107,11 +109,19 @@ public interface IEthNodeService {
 
     void addQuiliMonitor(EthNodeDetailModel ethNodeDetailModel);
 
-    @Transactional(rollbackFor = Exception.class)
     void quiliDailyStat(Date statDate);
 
-    @Transactional(rollbackFor = Exception.class)
     void quiliDailyStat(EthNodeDetailModel ethNodeDetailModel, Date statDate);
 
     EthNodeBackupModel getEthNodeBackup();
+    /**
+     * 修改节点名称
+     * @param id
+     * @param showName
+     * @return
+     */
+    EthNodeDetailModel updateShowName(Long id, String showName);
+
+    @Transactional(rollbackFor = Exception.class)
+    EthNodeModel updateExpireDate(Long id, Date expireDate);
 }

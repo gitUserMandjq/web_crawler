@@ -1,6 +1,5 @@
 package com.crawler.eth.node.service.impl;
 
-import com.crawler.eth.node.dao.EthNodeBackupDao;
 import com.crawler.eth.node.dao.EthNodeDetailDao;
 import com.crawler.eth.node.dao.EthNodeDetailTaskDao;
 import com.crawler.eth.node.enums.NodeTaskType;
@@ -12,6 +11,7 @@ import com.crawler.eth.node.service.IEthNodeService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -28,6 +28,13 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
         return taskList;
     }
     @Override
+    public List<EthNodeDetailTaskModel> listTaskByDetailId(Iterable<Long> detailIds){
+        if(detailIds == null || !detailIds.iterator().hasNext()){
+            return new ArrayList<>();
+        }
+        return ethNodeDetailTaskDao.listTaskByDetailId(detailIds);
+    }
+    @Override
     public void addBackupTask(EthNodeDetailModel detail, boolean force) throws Exception {
         EthNodeDetailTaskModel lastestDetailTask = getLastestDetailTask(detail.getId(), EthNodeDetailTaskModel.TASK_BACKUP);
         if(!force && lastestDetailTask != null
@@ -38,12 +45,12 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
         if(lastestDetailTask == null){
             lastestDetailTask = new EthNodeDetailTaskModel();
             lastestDetailTask.setNodeDetailId(detail.getId());
-            lastestDetailTask.setNodeName(detail.getNodeName());
             lastestDetailTask.setNodeType(detail.getNodeType());
             lastestDetailTask.setTaskType(EthNodeDetailTaskModel.TASK_BACKUP);
         }
+        lastestDetailTask.setNodeName(detail.getNodeName());
         lastestDetailTask.setCreateTime(new Date());
-        lastestDetailTask.setState(NodeTaskType.BackupEnum.PREPARE.getCode());
+        lastestDetailTask.setState(NodeTaskType.BackupEnum.PREPARE);
         ethNodeDetailTaskDao.save(lastestDetailTask);
         detail.setTaskState("准备备份");
         ethNodeDetailDao.save(detail);
@@ -96,17 +103,17 @@ public class EthNodeDetailTaskServiceImpl implements IEthNodeDetailTaskService {
         }
     }
     public void startBackup(EthNodeDetailTaskModel task){
-        task.setState(NodeTaskType.BackupEnum.START.getCode());
+        task.setState(NodeTaskType.BackupEnum.START);
         task.setStartTime(new Date());
         ethNodeDetailTaskDao.save(task);
     }
     public void finishBackup(EthNodeDetailTaskModel task){
-        task.setState(NodeTaskType.BackupEnum.END.getCode());
+        task.setState(NodeTaskType.BackupEnum.END);
         task.setEndTime(new Date());
         ethNodeDetailTaskDao.save(task);
     }
     public void errorBackup(EthNodeDetailTaskModel task, String comment){
-        task.setState(NodeTaskType.BackupEnum.ERROR.getCode());
+        task.setState(NodeTaskType.BackupEnum.ERROR);
         task.setEndTime(new Date());
         task.setComment(comment);
         ethNodeDetailTaskDao.save(task);

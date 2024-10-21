@@ -37,6 +37,9 @@
         <button id="avail_button">avail</button>
 <!--        状态：<span id="status"></span>-->
         <div id="quili_node">
+            <div id="test" class="layui-inline">
+                <input type="text" class="layui-input" id="date1" />
+            </div>
             <span>上线钱包</span>
             <div id="quili_nodeStatus" class="nodeStatus">
 
@@ -90,14 +93,117 @@
         $(".nodeStatus").addClass("hidden");
         $("#avail_nodeStatus").removeClass("hidden");
     })
+    let $dateInput;
     $(function () {
         getQuiliList();
         getionetNodeList();
         getAvailNodeList();
+        $("body").on('click', '.editNodeName', function() {
+            editText($(this), updateNodeName);
+        });
+        $dateInput = $('<input type="text" id="datepicker" style="display:none;">').appendTo('body');
+        // 初始化日期选择器
+        layui.use('laydate', function() {
+            var laydate = layui.laydate;
+            laydate.render({
+                elem: '#date1'//指定元素
+            });
+            // 添加点击事件监听器给所有单元格
+            $("body").on('click', '.editExpireDate', function() {
+                editDate($(this), laydate, updateExpireDate);
+            });
+        });
     });
+
+    // 编辑单元格
+    function editDate($cell, laydate, handle) {
+        var originalValue = $cell.text();
+        var dateConfig = {
+            elem: '#datepicker',
+            format: 'yyyy-MM-dd',
+            done: function(value, date, endDate) {
+                if (value) {
+                    const $cell1 = $(this.elem).data('cell');
+                    handle($cell1, value);
+                } else {
+                    layer.msg('请输入正确的日期格式（yyyy-MM-dd）', {icon: 2, time: 2000});
+                }
+            }
+        };
+
+        $dateInput.data('cell', $cell);
+        // 创建一个隐藏的输入框作为日期选择器的容器
+        $dateInput.val(originalValue);
+        // 显示日期选择器
+        laydate.render(dateConfig);
+
+        // 点击单元格时，日期选择器弹出
+        $dateInput.click();
+
+        // 设置日期选择器的位置
+        var offset = $cell.offset();
+        console.log(offset);
+        $('#layui-laydate2').css({
+            position: 'absolute',
+            top: offset.top + $cell.outerHeight(),
+            left: offset.left
+        });
+
+    }
+    function updateExpireDate($cell, val){
+        $cell.text(val);
+        const id = $cell.attr("key");
+        const url = "/web_crawler/eth/node/updateExpireDate";
+        const formData = {
+            "id":id,
+            "expireDate":val
+        };
+        $.post(url, formData, function(result){
+            if(result.statusCode != '200'){
+                layer.msg(result.errorMessage);
+            }
+        })
+    }
+    // 编辑单元格
+    function editText($cell, handle) {
+        var input = $('<input type="text" class="editing">').val($cell.text());
+        $cell.empty().append(input);
+
+        // 处理输入框失去焦点的情况
+        input.blur(function() {
+            handle($cell, input.val());
+            input.remove();
+        });
+        // 处理键盘事件
+        input.keydown(function(e) {
+            if (e.which === 13) { // Enter 键
+                $(this).blur();
+            } else if (e.which === 27) { // Esc 键
+                handle($cell, $cell.data('originalValue'));
+                input.remove();
+            }
+        });
+        // 存储原始值以备取消编辑时使用
+        $cell.data('originalValue', $cell.text());
+        input.focus();
+    }
+    function updateNodeName($cell, val){
+        $cell.text(val);
+        const id = $cell.attr("key");
+        const url = "/web_crawler/eth/node/updateShowName";
+        const formData = {
+            "id":id,
+            "showName":val
+        };
+        $.post(url, formData, function(result){
+            if(result.statusCode != '200'){
+                layer.msg(result.errorMessage);
+            }
+        })
+    }
     let timer;
     function getQuiliList(){
-        const url = "/web_crawler/eth/node/getNodeDetailList?nodeType=Quilibrium";
+        const url = "/web_crawler/eth/node/getQuiliDetailList?nodeType=Quilibrium";
         const formData = {};
         $.getAjax(url, formData, function(result){
             let list = result.data;
@@ -106,6 +212,7 @@
                 + "<th>节点</th>"
                 + "<th>Quili名称</th>"
                 + "<th>服务器</th>"
+                + "<th>服务器过期时间</th>"
                 + "<th>cpu/线程数/time_taken</th>"
                 + "<th class='figure'>余额</th>"
                 + "<th class='figure'>最近一次余额增长</th>"
@@ -147,11 +254,15 @@
                 totalTodayIncrement += todayIncrement;
                 const yesterdayIncrement = node["blockDiffValue"];
                 totalYesterdayIncrement += yesterdayIncrement;
+                const task = node["task"];
+                const server = node["node"];
+                const id = node["id"];
                 html += "<tr>";
                 html += "<td>"+(num++)+"</td>"
-                    + "<td>"+(node["showName"]?node["showName"]:node["nodeName"])+"</td>"
+                    + "<td key='"+id+"' class='editNodeName'>"+(node["showName"]?node["showName"]:node["nodeName"])+"</td>"
                     + "<td>"+node["nodeName"]+"</td>"
                     + "<td>"+node["serverIp"]+"</td>"
+                    + "<td key='"+id+"' class='editExpireDate'>"+(!server?"":getDateStr(server["expireDate"], "yyyy-MM-dd"))+"</td>"
                     + "<td>"+data["nproc"]+"/"+data["processNum"]+"/"+data["time_taken"]+"</td>"
                     + "<td class='figure'>"+balance.toFixed(4)+"</td>"
                     + "<td class='figure'>"+((data["balance"]-data['lastBalance']) * 1000 * 60 * 60/(data["updateTime"] - data["lastUpdateTime"])).toFixed(4)+"/小时</td>"
@@ -164,7 +275,7 @@
                     + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
                     + "<td>"+node["error"]+"</td>"
                     + "<td>"+node["descript"]+"</td>"
-                    + "<td><span id='taskState-"+node["nodeName"]+"'>"+node["taskState"]+"</span><button onclick=\"backup('"+node["nodeName"]+"')\">备份</button></td>";
+                    + "<td><span id='taskState-"+node["nodeName"]+"'>"+(!task?"":task["stateName"])+"</span><button onclick=\"backup('"+node["nodeName"]+"')\">备份</button></td>";
                 html += "</tr>";
             }
             html += "<tr>";
@@ -173,7 +284,7 @@
                 + "<td></td>"
                 + "<td></td>"
                 + "<td></td>"
-                + "<td class='figure'>"+totalBalance+"</td>"
+                + "<td class='figure'>"+totalBalance.toFixed(4)+"</td>"
                 + "<td class='figure'></td>"
                 + "<td class='figure'>"+totalTodayBalance.toFixed(4)+"</td>"
                 + "<td class='figure'>"+totalYesterdayBalance.toFixed(4)+"</td>"
@@ -192,6 +303,7 @@
         })
         $.getAjax(url + "&enabled=0", formData, function(result){
             const list = result.data;
+            let totalBalance = 0;
             let html = "<table class='commonTable'><tr>"
                 + "<th>序号</th>"
                 + "<th>Quili名称</th>"
@@ -205,16 +317,27 @@
             for(const i in list){
                 const node = list[i];
                 const data = JSON.parse(node["data"]);
+                const balance = parseFloat(data["balance"]);
+                totalBalance += balance;
                 html += "<tr>";
                 html += "<td>"+(num++)+"</td>"
                     + "<td>"+node["nodeName"]+"</td>"
-                    + "<td class='figure'>"+parseFloat(data["balance"]).toFixed(4)+"</td>"
+                    + "<td class='figure'>"+balance.toFixed(4)+"</td>"
                     + "<td class='figure'>"+data["increment"]+"</td>"
                     + "<td>"+getDateStr(node["lastUpdateTime"])+"</td>"
                     + "<td>"+node["error"]+"</td>"
                     + "<td>"+node["descript"]+"</td>";
                 html += "</tr>";
             }
+            html += "<tr>";
+            html += "<td></td>"
+                + "<td>总和</td>"
+                + "<td class='figure'>"+totalBalance.toFixed(4)+"</td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td></td>"
+                + "<td></td>"
+            html += "</tr>";
             html += "</table>";
             $("#quili_node_wallet").html(html);
         })
@@ -294,11 +417,14 @@
             setTimeout(function(){getAvailNodeList()}, 120000);
         })
     }
-    function getDateStr(date){
+    function getDateStr(date, format){
         if(date == null){
             return "";
         }
-        return new Date(date).getLocalTime(8).format("yyyy-MM-dd HH:mm:ss")
+        if(!format){
+            format = "yyyy-MM-dd HH:mm:ss";
+        }
+        return new Date(date).getLocalTime(8).format(format);
     }
     function isError(result){
         if("200" == result.statusCode){

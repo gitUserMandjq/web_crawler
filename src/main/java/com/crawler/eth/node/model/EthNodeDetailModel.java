@@ -61,6 +61,10 @@ public class EthNodeDetailModel {
     private String descript;
     @Column(name="taskState")
     private String taskState;
+    @Column(name="key")
+    private String key;
     @Transient
     private EthNodeModel node;
+    @Transient
+    private EthNodeDetailTaskModel task;
 }

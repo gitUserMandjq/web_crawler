@@ -6,6 +6,7 @@ import com.crawler.base.common.model.WebApiBaseResult;
 import com.crawler.base.utils.*;
 import com.crawler.eth.node.model.EthNodeBackupModel;
 import com.crawler.eth.node.model.EthNodeDetailModel;
+import com.crawler.eth.node.model.EthNodeDetailTaskModel;
 import com.crawler.eth.node.model.EthNodeModel;
 import com.crawler.eth.node.service.IEthBrowserService;
 import com.crawler.eth.node.service.IEthNodeDetailTaskService;
@@ -13,6 +14,7 @@ import com.crawler.eth.node.service.IEthNodeService;
 import com.crawler.jd.service.IJdService;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +28,7 @@ import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping(value = "/eth/node")
@@ -68,6 +71,30 @@ public class EthNodeController {
             , @RequestParam(value="nodeType") String nodeType
             , @RequestParam(value="enabled", defaultValue = "1") Integer enabled) throws Exception {
         List<EthNodeDetailModel> ethNodeModels = ethNodeService.listNodeDetailByNodeType(nodeType, enabled);
+        return WebApiBaseResult.success(ethNodeModels);
+    }
+    @RequestMapping("/getQuiliDetailList")
+    @ResponseBody
+    public WebApiBaseResult getQuiliDetailList(HttpSession httpSession, HttpServletRequest request
+            , @RequestParam(value="nodeType") String nodeType
+            , @RequestParam(value="enabled", defaultValue = "1") Integer enabled) throws Exception {
+        List<EthNodeDetailModel> ethNodeModels = ethNodeService.listNodeDetailByNodeType(EthNodeModel.NODETYPE_QUILIBRIUM, enabled);
+        List<Long> nodeIds = new ArrayList<>();
+        List<Long> detailIds = new ArrayList<>();
+        for (EthNodeDetailModel ethNodeModel : ethNodeModels) {
+            nodeIds.add(ethNodeModel.getNodeId());
+            detailIds.add(ethNodeModel.getId());
+        }
+        List<EthNodeModel> nodeList = ethNodeService.listNodeById(nodeIds);
+        Map<Long, EthNodeModel> nodeMap = nodeList.stream().collect(Collectors.toMap(v -> v.getId(), v -> v));
+        List<EthNodeDetailTaskModel> taskList = ethNodeDetailTaskService.listTaskByDetailId(detailIds);
+        Map<Long, EthNodeDetailTaskModel> taskMap = taskList.stream().collect(Collectors.toMap(v -> v.getNodeDetailId(), v -> v));
+        for (EthNodeDetailModel ethNodeModel : ethNodeModels) {
+            EthNodeModel node = nodeMap.get(ethNodeModel.getNodeId());
+            ethNodeModel.setNode(node);
+            EthNodeDetailTaskModel task = taskMap.get(ethNodeModel.getId());
+            ethNodeModel.setTask(task);
+        }
         return WebApiBaseResult.success(ethNodeModels);
     }
     /**
@@ -304,6 +331,22 @@ public class EthNodeController {
     @ResponseBody
     public WebApiBaseResult quiliDailyStat(HttpSession httpSession, HttpServletRequest request) throws Exception {
         ethNodeService.quiliDailyStat(DateUtils.addDays(DateUtils.parseAndFormat(new Date(), "yyyy-MM-dd"), -1));
+        return WebApiBaseResult.success();
+    }
+    @RequestMapping("/updateShowName")
+    @ResponseBody
+    public WebApiBaseResult updateShowName(HttpSession httpSession, HttpServletRequest request
+            , @RequestParam(required = false, value = "id") Long id
+            , @RequestParam(required = false, value = "showName") String showName) throws Exception {
+        ethNodeService.updateShowName(id, showName);
+        return WebApiBaseResult.success();
+    }
+    @RequestMapping("/updateExpireDate")
+    @ResponseBody
+    public WebApiBaseResult updateExpireDate(HttpSession httpSession, HttpServletRequest request
+            , @RequestParam(required = false, value = "id") Long id
+            , @RequestParam(required = false, value = "expireDate") @DateTimeFormat(pattern = "yyyy-MM-dd") Date expireDate) throws Exception {
+        ethNodeService.updateExpireDate(id, expireDate);
         return WebApiBaseResult.success();
     }
 }

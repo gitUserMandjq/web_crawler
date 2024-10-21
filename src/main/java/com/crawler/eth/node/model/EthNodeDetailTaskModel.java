@@ -1,5 +1,6 @@
 package com.crawler.eth.node.model;
 
+import com.crawler.eth.node.enums.NodeTaskType;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -25,6 +26,12 @@ public class EthNodeDetailTaskModel {
     public static final String TASK_BACKUP = "备份";
     @Column(name="state")
     private String state;//任务状态
+    @Column(name="stateName")
+    private String stateName;//任务状态名称
+    public void setState(NodeTaskType.BackupEnum e){
+        this.state = e.getCode();
+        this.stateName = e.getDescription();
+    }
     @Column(name="comment")
     private String comment;//备注
     @Column(name="createTime")

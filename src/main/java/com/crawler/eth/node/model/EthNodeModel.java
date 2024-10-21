@@ -56,6 +56,8 @@ public class EthNodeModel {
     private String restartScript;//
     @Column(name="pem")
     private String pem;//
+    @Column(name="expireDate")
+    private Date expireDate;//过期时间
 
     public static final String NODETYPE_SHARDEUM = "shardeum";
     public static final String NODETYPE_OPSIDE = "opside";
