@@ -103,7 +103,7 @@ public interface IEthNodeService {
 
     EthNodeDetailModel getNodeDetailByName(String nodeType, String nodeName);
 
-    void updateQuiliBalance(String nodeName, String version, String balance, String increment, String time_taken, String processNum, String nproc) throws IOException;
+    void updateQuiliBalance(String nodeName, String version, String balance, String increment, String frame_number, String processNum, String nproc) throws IOException;
 
     void addQuiliMonitor() throws InterruptedException;
 

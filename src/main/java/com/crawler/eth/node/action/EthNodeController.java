@@ -275,10 +275,10 @@ public class EthNodeController {
                                                @RequestParam(required = false, value = "version") String version,
                                                @RequestParam(required = false, value = "balance") String balance,
                                                @RequestParam(required = false, value = "increment") String increment,
-                                               @RequestParam(required = false, value = "time_taken") String time_taken,
+                                               @RequestParam(required = false, value = "frame_number") String frame_number,
                                                @RequestParam(required = false, value = "processNum") String processNum,
                                                @RequestParam(required = false, value = "nproc") String nproc) throws Exception {
-        ethNodeService.updateQuiliBalance(nodeName, version, balance, increment, time_taken, processNum, nproc);
+        ethNodeService.updateQuiliBalance(nodeName, version, balance, increment, frame_number, processNum, nproc);
         return WebApiBaseResult.success();
     }
     @RequestMapping("/addBackupTask")
